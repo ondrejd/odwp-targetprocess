@@ -14,9 +14,12 @@
 
 ## TODO
 
-* [x] ~~create settings with `login` and `password` (using [Settings API][4])~~
-* [ ] if `login` and `password` are set try to get [token][3]
+* [x] ~~create settings with `odwptp_login` and `odwptp_password` (using [Settings API][4])~~
+* [ ] if `odwptp_login` and `odwptp_password` are set try to get [token][3]
 * [ ] create shortcode which will present the data on front-end
+* [ ] check if `WP_HTTP_BLOCK_EXTERNAL` is `TRUE` and take appropriate action if not
+* [ ] __add setting `odwptp_url` which holds URL of Targetprocess API serverhost__
+* [ ] enable localization (Czech and English)
 
 [1]: https://wordpress.org/
 [2]: https://www.targetprocess.com/
