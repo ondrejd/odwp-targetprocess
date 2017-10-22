@@ -35,6 +35,7 @@ if ( ! function_exists( 'odwptp_settings_init' ) ) :
     function odwptp_settings_init() {
         register_setting( 'general', 'odwptp_login', ['type', 'string'] );
         register_setting( 'general', 'odwptp_password', ['type', 'string'] );
+        register_setting( 'general', 'odwptp_url', ['type', 'string'] );
 
         add_settings_section(
             'odwptp_settings_section',
@@ -47,7 +48,7 @@ if ( ! function_exists( 'odwptp_settings_init' ) ) :
         );
 
         add_settings_field(
-            'wporg_settings_login_field',
+            'odwptp_settings_login_field',
             __( 'Jméno/email', 'odwptp' ),
             'odwptp_settings_login_field_cb',
             'general',
@@ -55,9 +56,17 @@ if ( ! function_exists( 'odwptp_settings_init' ) ) :
         );
 
         add_settings_field(
-            'wporg_settings_password_field',
+            'odwptp_settings_password_field',
             __( 'Heslo', 'odwptp' ),
             'odwptp_settings_password_field_cb',
+            'general',
+            'odwptp_settings_section'
+        );
+
+        add_settings_field(
+            'odwptp_settings_url_field',
+            __( 'URL', 'odwptp' ),
+            'odwptp_settings_url_field_cb',
             'general',
             'odwptp_settings_section'
         );
@@ -97,7 +106,7 @@ if ( ! function_exists( 'odwptp_settings_login_field_cb' ) ) :
     function odwptp_settings_login_field_cb() {
         $val = get_option( 'odwptp_login' );
 ?>
-<input type="text" name="odwptp_login" value="<?= isset( $val ) ? esc_attr( $val ) : '' ?>">
+<input class="regular-text" name="odwptp_login" type="text" value="<?= isset( $val ) ? esc_attr( $val ) : '' ?>">
 <?php
     }
 endif;
@@ -112,7 +121,23 @@ if ( ! function_exists( 'odwptp_settings_password_field_cb' ) ) :
     function odwptp_settings_password_field_cb() {
         $val = get_option( 'odwptp_password' );
 ?>
-<input type="text" name="odwptp_password" value="<?= isset( $val ) ? esc_attr( $val ) : '' ?>">
+<input class="regular-text code" name="odwptp_password" type="text" value="<?= isset( $val ) ? esc_attr( $val ) : '' ?>">
+<?php
+    }
+endif;
+
+
+if ( ! function_exists( 'odwptp_settings_url_field_cb' ) ) :
+    /**
+     * @internal Renders input field for "url" setting.
+     * @return void
+     * @since 0.1
+     */
+    function odwptp_settings_url_field_cb() {
+        $val = get_option( 'odwptp_url' );
+?>
+<input class="regular-text code" name="odwptp_url" placeholder="<?php _e( 'https://[yourdomain].tpondemand.com', 'odwptp' ) ?>" type="url" value="<?= isset( $val ) ? esc_attr( $val ) : '' ?>">
+<p class="description"><?php printf( __( 'Zadejte URL serveru, který představuje váš přístupový bod k %sTargetprocess API%s.', 'odwptp' ), '<a href="#" target="_blank">', '</a>' ) ?></p>
 <?php
     }
 endif;
@@ -139,7 +164,8 @@ if ( ! function_exists( 'odwptp_print_admin_notice' ) ) :
             $classes .= ' is-dismissible';
         }
 
-        printf( '<div class="%s"><p>%s</p></div>', $classes, wp_kses( $message ) );
+        // XXX Use `wp_kses` to escape `$message`?
+        printf( '<div class="%s"><p>%s</p></div>', $classes, $message );
     }
 endif;
 
@@ -153,9 +179,10 @@ if ( ! function_exists( 'odwptp_check_credentials' ) ) :
     function odwptp_check_credentials() {
         $login = get_option( 'odwptp_login' );
         $password = get_option( 'odwptp_password' );
+        $url = get_option( 'odwptp_url' );
 
         // Credentials are not set
-        if( empty( $login ) || empty( $password ) ) {
+        if( empty( $login ) || empty( $password ) || empty( $url ) ) {
             add_action( 'admin_notices', function() {
                 odwptp_print_admin_notice( sprintf(
                     __( 'Pro správné použití pluginu <strong>odwp-targetprocess</strong> musíte nastavit přístupové údaje ke službě <strong>Targetprocess</strong> - viz. <a href="%s">Nastavení &gt; Obecné</a>.', 'odwptp' ),
@@ -166,7 +193,7 @@ if ( ! function_exists( 'odwptp_check_credentials' ) ) :
         }
 
         // Check the credentials
-        $url = 'https://icthunter.tpondemand.com/api/v1/Context/';
+        $url = rtrim( $url, '/' ) . '/api/v1/Context/';
         $ret = wp_remote_request( $url, [
             'headers' => [
                 'Authorization' => 'Basic ' . base64_encode( $login . ':' . $password ),
@@ -176,28 +203,12 @@ if ( ! function_exists( 'odwptp_check_credentials' ) ) :
 
         // Control request did not end well
         if ( ( $ret instanceof WP_Error ) ) {
-            add_action( 'admin_notices', function() use ( $ret ) {
-                $msg = '<ul>';
-
-                foreach ( $ret->get_error_messages() as $err_raw ) {
-                    $err = trim( $err_raw );
-
-                    if ( ! empty( $err ) ) {
-                        $msg .= '<li>' . $err . '</li>';
-                    }
-                }
-
-                $msg = '</ul>';
-
-                if ( $msg == '<ul></ul>' ) {
-                    $msg = sprintf(
-                        __( 'Při dotazu na server  <a href="%s" target="_blank">Targetprocess</a> nastala neznámá chyba - ujistěte se, že máte <a href="%s">nastavení</a> pluginu v pořádku.', 'odwptp' ),
-                        'https://www.targetprocess.com/',
-                        admin_url( 'options-general.php#odwptp-settings' )
-                    );
-                }
-
-                odwptp_print_admin_notice( $msg, 'error' );
+            add_action( 'admin_notices', function() {
+                odwptp_print_admin_notice( sprintf(
+                    __( 'Při dotazu na server  <a href="%s" target="_blank">Targetprocess</a> nastala neznámá chyba - ujistěte se, že máte <a href="%s">nastavení</a> pluginu v pořádku.', 'odwptp' ),
+                    'https://www.targetprocess.com/',
+                    admin_url( 'options-general.php#odwptp-settings' )
+                ), 'error' );
             } );
             return;
         }
@@ -212,8 +223,9 @@ if ( ! function_exists( 'odwptp_check_credentials' ) ) :
 
             add_action( 'admin_notices', function() {
                 odwptp_print_admin_notice( sprintf(
-                    __( 'Údaje pro připojení se k Vašemu <a href="%s" target="_blank">Targetprocess</a> účtu jsou správné, nyní můžete umístit <em>targetprocess_shortcode</em> do Vašich příspěvků či stránek.', 'odwptp' ),
-                    'https://www.targetprocess.com/'
+                    __( 'Údaje pro připojení se k Vašemu <a href="%s" target="_blank">Targetprocess</a> účtu jsou správné, nyní můžete umístit <em>targetprocess_shortcode</em> do Vašich příspěvků či stránek&hellip;%s', 'odwptp' ),
+                    'https://www.targetprocess.com/',
+                    '<br><br><a href="#">' . __( 'Nezobrazovat již tuto zprávu', 'odwptp' ) . '</a>'
                 ), 'success' );
             } );
             return;
