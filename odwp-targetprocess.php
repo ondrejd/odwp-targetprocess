@@ -3,7 +3,7 @@
  * Plugin Name: odwp-targetprocess
  * Plugin URI: https://github.com/ondrejd/odwp-targetprocess
  * Description: Plugin that uses <a href="https://www.targetprocess.com/" target="blank">Targetprocess API</a> to publish <em>user stories</em> on your site.
- * Version: 0.1
+ * Version: 0.2
  * Author: Ondrej Donek
  * Author URI: https://ondrejd.com/
  * License: GPLv3
@@ -205,6 +205,11 @@ if ( ! function_exists( 'odwptp_check_credentials' ) ) :
         // Check if the response is correct
         if ( $ret['response']['code'] == 200 ) {
             // XXX Make this hidden by user preference (so show it just once if user wants it).
+            /*$show = (bool) get_option( 'odwptp_show_connection_success' );
+            if ( $show === false ) {
+                return;
+            }*/
+
             add_action( 'admin_notices', function() {
                 odwptp_print_admin_notice( sprintf(
                     __( 'Údaje pro připojení se k Vašemu <a href="%s" target="_blank">Targetprocess</a> účtu jsou správné, nyní můžete umístit <em>targetprocess_shortcode</em> do Vašich příspěvků či stránek.', 'odwptp' ),
