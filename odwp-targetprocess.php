@@ -245,6 +245,35 @@ endif;
 add_action( 'admin_init', 'odwptp_check_credentials' );
 
 
+if ( ! function_exists( 'odwptp_check_wp_http_block_external' ) ) :
+    /**
+     * Checks if constant WP_HTTP_BLOCK_EXTERNAL isn't set `true`
+     * in `wp-config.php` file because it will block our requests.
+     * @return void
+     * @since 0.1
+     */
+    function odwptp_check_wp_http_block_external() {
+        if ( ! defined( 'WP_HTTP_BLOCK_EXTERNAL' ) ) {
+            return; // Everything is OK
+        }
+
+        if ( WP_HTTP_BLOCK_EXTERNAL !== true ) {
+            return; // Same as before - OK
+        }
+
+        // Now we just display notice to user and leave it on him
+        add_action( 'admin_notices', function() {
+            odwptp_print_admin_notice( sprintf(
+                __( 'Vaše nastavení v souboru <code>wp-config.php</code> může zapříčinit nefunkčnost pluginu <strong>odwp-targetprocess</strong>! Je třeba upravit nastavení hodnot konstant <code>WP_HTTP_BLOCK_EXTERNAL</code> a <code>WP_ACCESSIBLE_HOSTS</code> - více viz. <a href="%s" target="_blank">dokumentace</a>.', 'odwptp' ),
+                'https://codex.wordpress.org/Editing_wp-config.php#Block_External_URL_Requests'
+            ), 'error' );
+        } );
+    }
+endif;
+
+add_action( 'admin_init', 'odwptp_check_wp_http_block_external' );
+
+
 if ( ! function_exists( 'odwptp_xxx' ) ) :
     /**
      * ...

@@ -17,21 +17,28 @@
 Plugin provides several _WP_ admin notices that inform you about status of the plugin:
 
 When you activate the plugin and settings are not set yet:
+
 ![Warning - settings are not set](screenshot-2.png)
 
 When your settings are correct:
+
 ![Success - settings are correct](screenshot-3.png)
 
 When your settings are not correct:
+
 ![Error - settings are not correct](screenshot-4.png)
+
+When your `wp-config.php` settings block external requests:
+
+![Error - external requests are blocked](screenshot-5.png)
 
 ## TODO
 
 * [x] ~~create settings with `odwptp_login` and `odwptp_password` (using [Settings API][4])~~
 * [x] ~~if `odwptp_login` and `odwptp_password` are set try to get [token][3]~~
-  - [ ] __FIXME__ check if `WP_HTTP_BLOCK_EXTERNAL` is _false_ and take an action if not
+  - [x] ~~__FIXME__ check if `WP_HTTP_BLOCK_EXTERNAL` is _false_ and take an action if not~~
   - [ ] __FIXME__ Success message should react on "Don't show again" link.
-* [ ] create shortcode which will present the data on front-end
+* [ ] create shortcode which will present the data on the front-end
 * [x] ~~add setting `odwptp_url` which holds URL of Targetprocess API serverhost~~
 * [ ] enable localization (Czech and English)
 
