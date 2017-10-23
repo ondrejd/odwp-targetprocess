@@ -38,7 +38,8 @@ When your `wp-config.php` settings block external requests:
 * [x] ~~if `odwptp_login` and `odwptp_password` are set try to get [token][3]~~
   - [x] ~~__FIXME__ check if `WP_HTTP_BLOCK_EXTERNAL` is _false_ and take an action if not~~
   - [x] ~~__FIXME__ Success message should react on "Don't show again" link~~
-* [ ] __create shortcode which will present the data on the front-end__
+* [ ] __create shortcode `targetprocess-table` which will present the data on the front-end__
+  - [ ] add TinyMCE button with our shortcode (including configuration dialog)
 * [x] ~~add setting `odwptp_url` which holds URL of Targetprocess API serverhost~~
 * [ ] enable localization (Czech and English)
 

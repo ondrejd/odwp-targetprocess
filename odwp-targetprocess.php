@@ -187,13 +187,14 @@ if ( ! function_exists( 'odwptp_print_admin_notice' ) ) :
 endif;
 
 
-if ( ! function_exists( 'odwptp_check_credentials' ) ) :
+if ( ! function_exists( 'odwptp_call_targetprocess' ) ) :
     /**
-     * Checks Targetprocess credentials.
+     * Makes call to Targetprocess API.
+     * @param string $call
      * @return void
      * @since 0.1
      */
-    function odwptp_check_credentials() {
+    function odwptp_call_targetprocess( $call ) {
         $login = get_option( 'odwptp_login' );
         $password = get_option( 'odwptp_password' );
         $url = get_option( 'odwptp_url' );
@@ -210,13 +211,27 @@ if ( ! function_exists( 'odwptp_check_credentials' ) ) :
         }
 
         // Check the credentials
-        $url = rtrim( $url, '/' ) . '/api/v1/Context/';
+        $url = rtrim( $url, '/' ) . $call;
         $ret = wp_remote_request( $url, [
             'headers' => [
                 'Authorization' => 'Basic ' . base64_encode( $login . ':' . $password ),
                 'Accept' => 'application/json',
             ],
         ] );
+
+        return $ret;
+    }
+endif;
+
+
+if ( ! function_exists( 'odwptp_check_credentials' ) ) :
+    /**
+     * Checks Targetprocess credentials.
+     * @return void
+     * @since 0.1
+     */
+    function odwptp_check_credentials() {
+        $ret = odwptp_call_targetprocess( '/api/v1/Context/' );
 
         // Control request did not end well
         if ( ( $ret instanceof WP_Error ) ) {
@@ -297,6 +312,60 @@ if ( ! function_exists( 'odwptp_check_wp_http_block_external' ) ) :
 endif;
 
 add_action( 'admin_init', 'odwptp_check_wp_http_block_external' );
+
+
+if ( ! function_exists( 'odwptp_shortcode_add' ) ) :
+    /**
+     * Registers our shortcode "targetprocess-table" with displayed user stories.
+     * @param array $atts
+     * @return void
+     * @since 0.1
+     */
+    function odwptp_shortcode_add( $atts ) {
+        $a = shortcode_atts( [
+            'rows' => 100,
+            'ajax' => true,
+        ], $atts );
+
+        $stories = odwptp_get_user_stories();
+
+        ob_start();
+?>
+<div class="odwptp-targetprocess_table_cont">
+    <?php if ( ( $stories instanceof WP_Error ) ) :
+        // XXX Show error...
+        ?>
+    <pre><?php var_dump( $stories ) ?></pre>
+    <?php else : ?>
+    <pre><?php var_dump( $stories ) ?></pre>
+    <?php endif ?>
+</div>
+<?php
+        return ob_get_clean();
+    }
+endif;
+
+add_shortcode( 'targetprocess-table', 'odwptp_shortcode_add' );
+
+
+if ( ! function_exists( 'odwptp_get_user_stories' ) ) :
+    /**
+     * Returns user stories.
+     * @return array|WP_Error
+     * @since 0.1
+     */
+    function odwptp_get_user_stories() {
+        $ret = odwptp_call_targetprocess( '/api/v1/UserStories/' );
+
+        if ( ( $ret instanceof WP_Error ) ) {
+            return $ret;
+        }
+
+        // XXX Parse user stories!
+
+        return $ret;
+    }
+endif;
 
 
 if ( ! function_exists( 'odwptp_xxx' ) ) :
