@@ -147,7 +147,7 @@ if ( ! function_exists( 'odwptp_check_connection_success_msg' ) ) :
     /**
      * Checks if user wants to hide connection success message forever.
      * @return void
-     * @since 0.1
+     * @since 0.2
      */
     function odwptp_check_connection_success_msg() {
         if ( isset( $_GET['disable_odwptp_success_msg'] ) ) {
@@ -166,7 +166,7 @@ if ( ! function_exists( 'odwptp_print_admin_notice' ) ) :
      * @param string $message
      * @param string $type (Optional.) Possible values: ["error", "warning", "success", "info"]. Defaultly "info".
      * @param boolean $dismissible (Optional.) Defaultly `TRUE`.
-     * @since 0.1
+     * @since 0.2
      */
     function odwptp_print_admin_notice( $message, $type = 'info', $dismissible = true ) {
         $classes = 'notice';
@@ -192,7 +192,7 @@ if ( ! function_exists( 'odwptp_call_targetprocess' ) ) :
      * Makes call to Targetprocess API.
      * @param string $call
      * @return void
-     * @since 0.1
+     * @since 0.3
      */
     function odwptp_call_targetprocess( $call ) {
         $login = get_option( 'odwptp_login' );
@@ -228,7 +228,7 @@ if ( ! function_exists( 'odwptp_check_credentials' ) ) :
     /**
      * Checks Targetprocess credentials.
      * @return void
-     * @since 0.1
+     * @since 0.2
      */
     function odwptp_check_credentials() {
         $ret = odwptp_call_targetprocess( '/api/v1/Context/' );
@@ -290,7 +290,7 @@ if ( ! function_exists( 'odwptp_check_wp_http_block_external' ) ) :
      * Checks if constant WP_HTTP_BLOCK_EXTERNAL isn't set `true`
      * in `wp-config.php` file because it will block our requests.
      * @return void
-     * @since 0.1
+     * @since 0.2
      */
     function odwptp_check_wp_http_block_external() {
         if ( ! defined( 'WP_HTTP_BLOCK_EXTERNAL' ) ) {
@@ -319,7 +319,7 @@ if ( ! function_exists( 'odwptp_shortcode_add' ) ) :
      * Registers our shortcode "targetprocess-table" with displayed user stories.
      * @param array $atts
      * @return void
-     * @since 0.1
+     * @since 0.3
      */
     function odwptp_shortcode_add( $atts ) {
         $a = shortcode_atts( [
@@ -327,7 +327,7 @@ if ( ! function_exists( 'odwptp_shortcode_add' ) ) :
             'ajax' => true,
         ], $atts );
 
-        $ret = odwptp_call_targetprocess( '/api/v1/UserStories/' );
+        $ret = odwptp_call_targetprocess( '/api/v1/UserStories/?take=100&skip=0' );
 
         ob_start();
 ?>
@@ -350,8 +350,9 @@ if ( ! function_exists( 'odwptp_shortcode_add' ) ) :
         $stories = odwptp_parse_user_stories( $ret );
         // XXX Stories are allways array but we need to check if count isn't zero.
         ?>
+        <pre><?php var_dump( $stories ); exit(); ?></pre>
         <?php foreach ( $stories as $story ) : ?>
-            <pre><?php var_dump( $story ) ?></pre>
+            <pre><?php var_dump( $story ); exit(); ?></pre>
         <?php endforeach ?>
     <?php endif ?>
 </div>
@@ -363,6 +364,136 @@ endif;
 add_shortcode( 'targetprocess-table', 'odwptp_shortcode_add' );
 
 
+if ( ! class_exists( 'ODWP_TP_UserStory' ) ) :
+    /**
+     * Class representing single user story.
+     * @since 0.3
+     */
+    class ODWP_TP_UserStory {
+
+        /**
+         * @var int $id
+         * @since 0.3
+         */
+        protected $id;
+
+        /**
+         * @var string $role
+         * @since 0.3
+         */
+        protected $role;
+
+        /**
+         * @var string $tags
+         * @since 0.3
+         */
+        protected $tags;
+
+        /**
+         * @var string $min_md_rate
+         * @since 0.3
+         */
+        protected $min_md_rate;
+
+        /**
+         * @var string $opt_md_rate
+         * @since 0.3
+         */
+        protected $opt_md_rate;
+
+        /**
+         * @var string $contract_type
+         * @since 0.3
+         */
+        protected $contract_type;
+
+        /**
+         * @var string $description
+         * @since 0.3
+         */
+        protected $description;
+
+        /**
+         * Constructor.
+         * @param array $args
+         * @return void
+         * @since 0.3
+         */
+        public function __construct( $args = [] ) {
+            if ( isset( $args['id'] ) ) {
+                $this->id = intval( $args['id'] );
+            }
+
+            if ( isset( $args['role'] ) ) {
+                $this->role = $args['role'];
+            }
+
+            if ( isset( $args['tags'] ) ) {
+                $this->tags = $args['tags'];
+            }
+
+            if ( isset( $args['min_md_rate'] ) ) {
+                $this->min_md_rate = $args['min_md_rate'];
+            }
+
+            if ( isset( $args['contract_type'] ) ) {
+                $this->contract_type = $args['contract_type'];
+            }
+
+            if ( isset( $args['opt_md_rate'] ) ) {
+                $this->opt_md_rate = $args['opt_md_rate'];
+            }
+
+            if ( isset( $args['description'] ) ) {
+                $this->description = $args['description'];
+            }
+        }
+
+        /**
+         * @return int Id of the user story.
+         * @since 0.3
+         */
+        public function get_id() { return $id; }
+
+        /**
+         * @return string Role of the user story.
+         * @since 0.3
+         */
+        public function get_role() { return $role; }
+
+        /**
+         * @return string Tags of the user story.
+         * @since 0.3
+         */
+        public function get_tags() { return $tags; }
+
+        /**
+         * @return string Minimal MD rate of the user story.
+         * @since 0.3
+         */
+        public function get_min_md_rate() { return $min_md_rate; }
+
+        /**
+         * @return string Optimal MD rate of the user story.
+         * @since 0.3
+         */
+        public function get_opt_md_rate() { return $opt_md_rate; }
+
+        /**
+         * @return string Contract type of the user story.
+         * @since 0.3
+         */
+        public function get_contract_type() { return $contract_type; }
+
+        /**
+         * @return string Description of the user story.
+         * @since 0.3
+         */
+        public function get_description() { return $description; }
+    }
+endif;
+
+
 if ( ! function_exists( 'odwptp_parse_user_stories' ) ) :
     /**
      * Parses user stories.
@@ -372,9 +503,47 @@ if ( ! function_exists( 'odwptp_parse_user_stories' ) ) :
      */
     function odwptp_parse_user_stories( $response ) {
         $json = json_decode( $response['body'] );
-        // XXX Parse user stories!
+        $ret  = [];
 
-        return $json;
+        if ( ! is_object( $json ) ) {
+            return $ret;
+        }
+
+        if ( ! property_exists( $json, 'Items' ) ) {
+            return $ret;
+        }
+
+        foreach ( $json->Items as $_story ) {
+            $role = '';
+            $min_md_rate = '';
+            $opt_md_rate = '';
+            $contract_type = '';
+
+            foreach ( $_story->CustomFields as $field ) {
+                if ( ! is_object( $field ) ) {
+                    continue;
+                }
+
+                switch ( $field->Name) {
+                    case 'Role'            : $role          = $field->Value; break;
+                    case 'Minimal MD rate' : $min_md_rate   = $field->Value; break;
+                    case 'Optimal MD rate' : $opt_md_rate   = $field->Value; break;
+                    case 'Contract type'   : $contract_type = $field->Value; break;
+                }
+            }
+
+            $ret[] = new ODWP_TP_UserStory( [
+                'id'            => $_story->Id,
+                'role'          => $role,
+                'tags'          => $_story->Tags,
+                'min_md_rate'   => $min_md_rate,
+                'opt_md_rate'   => $opt_md_rate,
+                'contract_type' => $contract_type,
+                'description'   => $_story->Description,
+            ] );
+        }
+
+        return $ret;
     }
 endif;
 
