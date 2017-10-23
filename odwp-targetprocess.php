@@ -143,6 +143,23 @@ if ( ! function_exists( 'odwptp_settings_url_field_cb' ) ) :
 endif;
 
 
+if ( ! function_exists( 'odwptp_check_connection_success_msg' ) ) :
+    /**
+     * Checks if user wants to hide connection success message forever.
+     * @return void
+     * @since 0.1
+     */
+    function odwptp_check_connection_success_msg() {
+        if ( isset( $_GET['disable_odwptp_success_msg'] ) ) {
+            add_option( 'odwptp_show_connection_success', 0 );
+            update_option( 'odwptp_show_connection_success', 0 );
+        }
+    }
+endif;
+
+add_action( 'admin_init', 'odwptp_check_connection_success_msg' );
+
+
 if ( ! function_exists( 'odwptp_print_admin_notice' ) ) :
     /**
      * Prints WP admin notice.
@@ -209,23 +226,31 @@ if ( ! function_exists( 'odwptp_check_credentials' ) ) :
                     'https://www.targetprocess.com/',
                     admin_url( 'options-general.php#odwptp-settings' )
                 ), 'error' );
-            } );
+            }, 99 );
             return;
         }
 
         // Check if the response is correct
         if ( $ret['response']['code'] == 200 ) {
-            // XXX Make this hidden by user preference (so show it just once if user wants it).
-            /*$show = (bool) get_option( 'odwptp_show_connection_success' );
+            // Make this hidden by user preference (so show it just once if user wants it).
+            $show = (bool) get_option( 'odwptp_show_connection_success', true );
+
             if ( $show === false ) {
                 return;
-            }*/
+            }
 
             add_action( 'admin_notices', function() {
+                try {
+                    $screen = get_current_screen();
+                    $current_url = admin_url( $screen->parent_file ) . '?disable_odwptp_success_msg=1';
+                } catch ( Exception $e ) {
+                    $current_url = admin_url( '?disable_odwptp_success_msg=1' );
+                }
+
                 odwptp_print_admin_notice( sprintf(
                     __( 'Údaje pro připojení se k Vašemu <a href="%s" target="_blank">Targetprocess</a> účtu jsou správné, nyní můžete umístit <em>targetprocess_shortcode</em> do Vašich příspěvků či stránek&hellip;%s', 'odwptp' ),
                     'https://www.targetprocess.com/',
-                    '<br><br><a href="#">' . __( 'Nezobrazovat již tuto zprávu', 'odwptp' ) . '</a>'
+                    '<br><br><a href="' . $current_url  . '">' . __( 'Nezobrazovat již tuto zprávu', 'odwptp' ) . '</a>'
                 ), 'success' );
             } );
             return;

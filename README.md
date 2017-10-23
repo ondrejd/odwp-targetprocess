@@ -37,7 +37,7 @@ When your `wp-config.php` settings block external requests:
 * [x] ~~create settings with `odwptp_login` and `odwptp_password` (using [Settings API][4])~~
 * [x] ~~if `odwptp_login` and `odwptp_password` are set try to get [token][3]~~
   - [x] ~~__FIXME__ check if `WP_HTTP_BLOCK_EXTERNAL` is _false_ and take an action if not~~
-  - [ ] __FIXME__ Success message should react on "Don't show again" link.
+  - [x] ~~__FIXME__ Success message should react on "Don't show again" link~~
 * [ ] create shortcode which will present the data on the front-end
 * [x] ~~add setting `odwptp_url` which holds URL of Targetprocess API serverhost~~
 * [ ] enable localization (Czech and English)
