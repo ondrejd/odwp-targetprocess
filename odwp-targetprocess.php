@@ -327,17 +327,32 @@ if ( ! function_exists( 'odwptp_shortcode_add' ) ) :
             'ajax' => true,
         ], $atts );
 
-        $stories = odwptp_get_user_stories();
+        $ret = odwptp_call_targetprocess( '/api/v1/UserStories/' );
 
         ob_start();
 ?>
 <div class="odwptp-targetprocess_table_cont">
-    <?php if ( ( $stories instanceof WP_Error ) ) :
-        // XXX Show error...
+    <?php if ( ( $ret instanceof WP_Error ) ) : ?>
+    <p class="odwptp-connection_error"><?php
+        printf(
+            __( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
+            '<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
+        );
+    ?></p>
+<?php elseif ( $ret['response']['code'] != 200 ) : ?>
+    <p class="odwptp-connection_error"><?php
+        printf(
+            __( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba při spojení - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
+            '<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
+        );
+    ?></p>
+    <?php else :
+        $stories = odwptp_parse_user_stories( $ret );
+        // XXX Stories are allways array but we need to check if count isn't zero.
         ?>
-    <pre><?php var_dump( $stories ) ?></pre>
-    <?php else : ?>
-    <pre><?php var_dump( $stories ) ?></pre>
+        <?php foreach ( $stories as $story ) : ?>
+            <pre><?php var_dump( $story ) ?></pre>
+        <?php endforeach ?>
     <?php endif ?>
 </div>
 <?php
@@ -348,22 +363,18 @@ endif;
 add_shortcode( 'targetprocess-table', 'odwptp_shortcode_add' );
 
 
-if ( ! function_exists( 'odwptp_get_user_stories' ) ) :
+if ( ! function_exists( 'odwptp_parse_user_stories' ) ) :
     /**
-     * Returns user stories.
-     * @return array|WP_Error
+     * Parses user stories.
+     * @param array $response
+     * @return array
      * @since 0.1
      */
-    function odwptp_get_user_stories() {
-        $ret = odwptp_call_targetprocess( '/api/v1/UserStories/' );
-
-        if ( ( $ret instanceof WP_Error ) ) {
-            return $ret;
-        }
-
+    function odwptp_parse_user_stories( $response ) {
+        $json = json_decode( $response['body'] );
         // XXX Parse user stories!
 
-        return $ret;
+        return $json;
     }
 endif;
 
