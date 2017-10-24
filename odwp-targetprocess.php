@@ -348,18 +348,62 @@ if ( ! function_exists( 'odwptp_shortcode_add' ) ) :
     ?></p>
     <?php else :
         $stories = odwptp_parse_user_stories( $ret );
-        // XXX Stories are allways array but we need to check if count isn't zero.
-        ?>
-        <pre><?php var_dump( $stories ); exit(); ?></pre>
-        <?php foreach ( $stories as $story ) : ?>
-            <pre><?php var_dump( $story ); exit(); ?></pre>
-        <?php endforeach ?>
-    <?php endif ?>
+
+        if ( count( $stories ) == 0 ) : ?>
+            <p class="odwptp-connection_error"><?php
+                printf(
+                    __( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba při spojení - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
+                    '<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
+                );
+            ?></p><?php
+        endif;
+
+        odwptp_render_targetprocess_userstories( $stories );
+    endif; ?>
 </div>
 <?php
         return ob_get_clean();
     }
 endif;
+
+
+if ( ! function_exists( 'odwptp_render_targetprocess_userstories' ) ) :
+    /**
+     * @internal Renders user stories downloaded from Targetprocess.
+     * @param array $stories Array of {@see ODWP_TP_UserStory}
+     * @return void
+     * @since 0.1
+     */
+    function odwptp_render_targetprocess_userstories( $stories ) {
+?>
+<table id="odwptp-targetprocess_table" class="odwptp-targetprocess_table">
+    <thead>
+        <tr>
+            <th scope="col"><?php _e( 'ID', 'odwptp' ) ?></th>
+            <th scope="col"><?php _e( 'Role', 'odwptp' ) ?></th>
+            <th scope="col"><?php _e( 'Tagy', 'odwptp' ) ?></th>
+            <th scope="col"><?php _e( 'Min. MD rate', 'odwptp' ) ?></th>
+            <th scope="col"><?php _e( 'Opt. MD rate', 'odwptp' ) ?></th>
+            <th scope="col"><?php _e( 'Typ kontraktu', 'odwptp' ) ?></th>
+        </tr>
+    <tbody>
+    </thead>
+        <?php foreach ( $stories as $story ) : ?>
+        <tr>
+            <th scope="row"><?php echo $story->get_id() ?></th>
+            <td><?php echo $story->get_role() ?></td>
+            <td><?php echo $story->get_tags() ?></td>
+            <td><?php echo $story->get_min_md_rate() ?></td>
+            <td><?php echo $story->get_opt_md_rate() ?></td>
+            <td><?php echo $story->get_contract_type() ?></td>
+        </tr>
+        <?php endforeach ?>
+    </tbody>
+</table>
+<?php
+    }
+endif;
+
 
 add_shortcode( 'targetprocess-table', 'odwptp_shortcode_add' );
 
@@ -453,43 +497,43 @@ if ( ! class_exists( 'ODWP_TP_UserStory' ) ) :
          * @return int Id of the user story.
          * @since 0.3
          */
-        public function get_id() { return $id; }
+        public function get_id() { return $this->id; }
 
         /**
          * @return string Role of the user story.
          * @since 0.3
          */
-        public function get_role() { return $role; }
+        public function get_role() { return $this->role; }
 
         /**
          * @return string Tags of the user story.
          * @since 0.3
          */
-        public function get_tags() { return $tags; }
+        public function get_tags() { return $this->tags; }
 
         /**
          * @return string Minimal MD rate of the user story.
          * @since 0.3
          */
-        public function get_min_md_rate() { return $min_md_rate; }
+        public function get_min_md_rate() { return $this->min_md_rate; }
 
         /**
          * @return string Optimal MD rate of the user story.
          * @since 0.3
          */
-        public function get_opt_md_rate() { return $opt_md_rate; }
+        public function get_opt_md_rate() { return $this->opt_md_rate; }
 
         /**
          * @return string Contract type of the user story.
          * @since 0.3
          */
-        public function get_contract_type() { return $contract_type; }
+        public function get_contract_type() { return $this->contract_type; }
 
         /**
          * @return string Description of the user story.
          * @since 0.3
          */
-        public function get_description() { return $description; }
+        public function get_description() { return $this->description; }
     }
 endif;
 
@@ -544,6 +588,54 @@ if ( ! function_exists( 'odwptp_parse_user_stories' ) ) :
         }
 
         return $ret;
+    }
+endif;
+
+
+if ( ! function_exists( 'odwptp_shrotcode_button_init' ) ) :
+    /**
+     * Registers TinyMCE button for our shortcode.
+     * @return void
+     * @since 0.1
+     */
+    function odwptp_shrotcode_button_init() {
+        if ( ! current_user_can( 'edit_posts' ) && ! current_user_can( 'edit_pages' ) && get_user_option( 'rich_editing' ) == 'true' ) {
+            return;
+        }
+
+        add_filter( 'mce_external_plugins', 'odwptp_tinymce_external_plugins' );
+        add_filter( 'mce_buttons', 'odwptp_add_tinymce_button' );
+    }
+endif;
+
+add_action( 'admin_init', 'odwptp_shrotcode_button_init' );
+
+
+if ( ! function_exists( 'odwptp_tinymce_external_plugins' ) ) :
+    /**
+     * @internal Adds our plugin into the TinyMCE.
+     * @param array $plugins
+     * @return array
+     * @since 0.1
+     */
+    function odwptp_tinymce_external_plugins( $plugins ) {
+        $plugins['odwptp_targetprocess_table'] = plugins_url( 'assets/js/targetprocess_table-shortcode.js', __FILE__ );
+        return $plugins;
+    }
+endif;
+
+
+if ( ! function_exists( 'odwptp_add_tinymce_button' ) ) :
+    /**
+     * @internal Adds TinyMCE button.
+     * @param array $buttons
+     * @return array
+     * @since 0.1
+     */
+    function odwptp_add_tinymce_button( $buttons ) {
+        //Add the button ID to the $button array
+        $buttons[] = 'odwptp_targetprocess_table';
+        return $buttons;
     }
 endif;
 

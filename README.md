@@ -32,6 +32,12 @@ When your `wp-config.php` settings block external requests:
 
 ![Error - external requests are blocked](screenshot-5.png)
 
+### Shortcode for TinyMCE
+
+When you editing posts or pages you can easily add our shortcode with table with user stories:
+
+![TinyMCE button](screenshot-6.png)
+
 ## TODO
 
 * [x] ~~create settings with `odwptp_login` and `odwptp_password` (using [Settings API][4])~~
@@ -39,13 +45,18 @@ When your `wp-config.php` settings block external requests:
   - [x] ~~__FIXME__ check if `WP_HTTP_BLOCK_EXTERNAL` is _false_ and take an action if not~~
   - [x] ~~__FIXME__ Success message should react on "Don't show again" link~~
 * [ ] __create shortcode `targetprocess-table` which will present the data on the front-end__
-  - [ ] add TinyMCE button with our shortcode (including configuration dialog)
+  - [x] ~~add TinyMCE button with our shortcode (including configuration dialog)~~
 * [x] ~~add setting `odwptp_url` which holds URL of Targetprocess API serverhost~~
 * [ ] enable localization (Czech and English)
 
 ## Changelog
 
 __Note:__ Versions are in reverse order.
+
+### Version 0.3
+
+* added initial version of `targetprocess-table` shortcode
+* added TinyMCE button for our shortcode
 
 ### Version 0.2
 
