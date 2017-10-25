@@ -323,8 +323,8 @@ if ( ! function_exists( 'odwptp_shortcode_add' ) ) :
      */
     function odwptp_shortcode_add( $atts ) {
         $a = shortcode_atts( [
-            'rows' => 100,
-            'ajax' => true,
+            'rows'  => 100,
+            'title' => '',
         ], $atts );
 
         $ret = odwptp_call_targetprocess( '/api/v1/UserStories/?take=100&skip=0' );
