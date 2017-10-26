@@ -324,10 +324,12 @@ if ( ! function_exists( 'odwptp_shortcode_add' ) ) :
     function odwptp_shortcode_add( $atts ) {
         $a = shortcode_atts( [
             'rows'  => 100,
+            'skip'  => 0,
             'title' => '',
         ], $atts );
 
-        $ret = odwptp_call_targetprocess( '/api/v1/UserStories/?take=100&skip=0' );
+        $url = '/api/v1/UserStories/?take=' . $a['rows'] . '&skip=' . $a['skip'] . '&orderByDesc=ID';
+        $ret = odwptp_call_targetprocess( $url );
 
         ob_start();
 ?>
@@ -358,7 +360,7 @@ if ( ! function_exists( 'odwptp_shortcode_add' ) ) :
             ?></p><?php
         endif;
 
-        odwptp_render_targetprocess_userstories( $stories );
+        odwptp_render_targetprocess_userstories( $stories, $a );
     endif; ?>
 </div>
 <?php
@@ -367,24 +369,108 @@ if ( ! function_exists( 'odwptp_shortcode_add' ) ) :
 endif;
 
 
-if ( ! function_exists( 'odwptp_render_targetprocess_userstories' ) ) :
+if ( ! function_exists( 'odwptp_render_targetprocess_tablenav' ) ) :
     /**
-     * @internal Renders user stories downloaded from Targetprocess.
-     * @param array $stories Array of {@see ODWP_TP_UserStory}
+     * @internal Renders table navigation.
+     * @param array $args
      * @return void
      * @since 0.1
      */
-    function odwptp_render_targetprocess_userstories( $stories ) {
+    function odwptp_render_targetprocess_tablenav( $args ) {
 ?>
-<table id="odwptp-targetprocess_table" class="odwptp-targetprocess_table">
+<div class="tablenav <?php echo $args['position'] ?>">
+    <div class="tablenav-pages">
+        <span class="displaying-num"><?php printf( __( 'Zobrazeno položek: %d', 'odwptp' ), $args['count'] ) ?></span>
+        <?php if ( ! ( $args['is_start'] && $args['is_end'] ) ) : ?>
+        <span class="pagination-links">
+            <?php if ( ! $args['is_start'] ) : ?>
+            <a class="prev-page" href="<?php echo $args['prev_url'] ?>"><?php _e( 'Předchozí', 'odwptp' ) ?></a>
+            <?php else : ?>
+            <span class="prev-page"><?php _e( 'Předchozí', 'odwptp' ) ?></span>
+            <?php endif ?>
+            <?php if ( ! $args['is_end'] ) : ?>
+            <a class="next-page" href="<?php echo $args['next_url'] ?>"><?php _e( 'Následující', 'odwptp' ) ?></a>
+            <?php else : ?>
+            <span class="next-page"><?php _e( 'Následující', 'odwptp' ) ?></span>
+            <?php endif ?>
+        </span>
+        <?php endif ?>
+    </div>
+</div>
+<?php
+    }
+endif;
+
+
+if ( ! function_exists( 'odwptp_render_targetprocess_userstories' ) ) :
+    /**
+     * @global WP $wp
+     * @internal Renders user stories downloaded from Targetprocess.
+     * @param array $stories Array of {@see ODWP_TP_UserStory}
+     * @param array $atts Array of attributes passed to the "targetprocess-table" shortcode.
+     * @return void
+     * @since 0.3
+     * @todo Add filtering, pagination and sorting!
+     */
+    function odwptp_render_targetprocess_userstories( $stories, $atts ) {
+        global $wp;
+
+        $count    = count( $stories );
+        $is_start = ( $atts['skip'] == 0 );
+        $is_end   = ( $count < $atts['rows'] );
+        $base_url = home_url( $wp->request );
+        $prev_url = home_url( add_query_arg( ['count' => $count, 'skip' => $kip, 'prev' => 1], $wp->request ) );
+        $next_url = home_url( add_query_arg( ['count' => $count, 'skip' => $kip, 'next' => 1], $wp->request ) );
+
+        odwptp_render_targetprocess_tablenav( [
+            'position' => 'top',
+            'count'    => $count,
+            'is_start' => $is_start,
+            'is_end'   => $is_end,
+            'base_url' => $base_url,
+            'prev_url' => $prev_url,
+            'next_url' => $next_url,
+        ] );
+?>
+<table id="odwptp-targetprocess_table" class="targetprocess-table">
     <thead>
         <tr>
-            <th scope="col"><?php _e( 'ID', 'odwptp' ) ?></th>
-            <th scope="col"><?php _e( 'Role', 'odwptp' ) ?></th>
-            <th scope="col"><?php _e( 'Tagy', 'odwptp' ) ?></th>
-            <th scope="col"><?php _e( 'Min. MD rate', 'odwptp' ) ?></th>
-            <th scope="col"><?php _e( 'Opt. MD rate', 'odwptp' ) ?></th>
-            <th scope="col"><?php _e( 'Typ kontraktu', 'odwptp' ) ?></th>
+            <th class="column-id column-primary sorted desc" scope="col">
+                <a href="#">
+                    <span><?php _e( 'ID', 'odwptp' ) ?></span>
+                    <span class="sorting-indicator"></span>
+                </a>
+            </th>
+            <th class="column-role sortable" scope="col">
+                <a href="#">
+                    <span><?php _e( 'Role', 'odwptp' ) ?></span>
+                    <span class="sorting-indicator"></span>
+                </a>
+            </th>
+            <th class="column-role sortable" scope="col">
+                <a href="#">
+                    <span><?php _e( 'Tagy', 'odwptp' ) ?></span>
+                    <span class="sorting-indicator"></span>
+                </a>
+            </th>
+            <th class="column-role sortable" scope="col">
+                <a href="#">
+                    <span><?php _e( 'Min. MD rate', 'odwptp' ) ?></span>
+                    <span class="sorting-indicator"></span>
+                </a>
+            </th>
+            <th class="column-role sortable" scope="col">
+                <a href="#">
+                    <span><?php _e( 'Opt. MD rate', 'odwptp' ) ?></span>
+                    <span class="sorting-indicator"></span>
+                </a>
+            </th>
+            <th class="column-role sortable" scope="col">
+                <a href="#">
+                    <span><?php _e( 'Typ kontraktu', 'odwptp' ) ?></span>
+                    <span class="sorting-indicator"></span>
+                </a>
+            </th>
         </tr>
     <tbody>
     </thead>
@@ -543,7 +629,7 @@ if ( ! function_exists( 'odwptp_parse_user_stories' ) ) :
      * Parses user stories.
      * @param array $response
      * @return array
-     * @since 0.1
+     * @since 0.3
      */
     function odwptp_parse_user_stories( $response ) {
         $json = json_decode( $response['body'] );
@@ -596,7 +682,7 @@ if ( ! function_exists( 'odwptp_shrotcode_button_init' ) ) :
     /**
      * Registers TinyMCE button for our shortcode.
      * @return void
-     * @since 0.1
+     * @since 0.3
      */
     function odwptp_shrotcode_button_init() {
         if ( ! current_user_can( 'edit_posts' ) && ! current_user_can( 'edit_pages' ) && get_user_option( 'rich_editing' ) == 'true' ) {
@@ -616,7 +702,7 @@ if ( ! function_exists( 'odwptp_tinymce_external_plugins' ) ) :
      * @internal Adds our plugin into the TinyMCE.
      * @param array $plugins
      * @return array
-     * @since 0.1
+     * @since 0.3
      */
     function odwptp_tinymce_external_plugins( $plugins ) {
         $plugins['odwptp_targetprocess_table'] = plugins_url( 'assets/js/targetprocess_table-shortcode.js', __FILE__ );
@@ -630,7 +716,7 @@ if ( ! function_exists( 'odwptp_add_tinymce_button' ) ) :
      * @internal Adds TinyMCE button.
      * @param array $buttons
      * @return array
-     * @since 0.1
+     * @since 0.3
      */
     function odwptp_add_tinymce_button( $buttons ) {
         //Add the button ID to the $button array
@@ -638,6 +724,20 @@ if ( ! function_exists( 'odwptp_add_tinymce_button' ) ) :
         return $buttons;
     }
 endif;
+
+
+if ( ! function_exists( 'odwptp_add_stylesheet' ) ) :
+    /**
+     * @internal Adds our stylesheet.
+     * @return void
+     * @since 0.3
+     */
+    function odwptp_add_stylesheet() {
+        wp_enqueue_style( 'odwp-targetprocess', plugins_url( 'assets/css/public.css', __FILE__ ) );
+    }
+endif;
+
+add_action( 'wp_head', 'odwptp_add_stylesheet' );
 
 
 if ( ! function_exists( 'odwptp_xxx' ) ) :

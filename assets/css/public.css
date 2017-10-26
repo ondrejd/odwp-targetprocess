@@ -1,0 +1,82 @@
+/**
+ * @author Ondrej Donek <ondrejd@gmail.com>
+ * @link https://github.com/ondrejd/odwp-targetprocess for the canonical source repository
+ * @license https://www.gnu.org/licenses/gpl-3.0.en.html GNU General Public License 3.0
+ * @package odwp-targetprocess
+ * @since 0.3
+ */
+
+.table-nav {
+    clear: both;
+    height: 30px;
+    margin: 6px 0 4px;
+    vertical-align: middle;
+}
+
+.tablenav-pages {
+    float: right;
+    height: 28px;
+    margin-top: 3px;
+    cursor: default;
+    color: #555;
+    width: 100%;
+}
+.tablenav-pages .displaying-num {
+    margin-right: 7px;
+}
+
+.targetprocess-table {
+    clear: both;
+}
+
+.screen-reader-text {
+    position: absolute;
+    margin: -1px;
+    padding: 0;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    border: 0;
+    word-wrap: normal !important;
+}
+
+
+.sorting-indicator {
+	display: block;
+	visibility: hidden;
+	width: 10px;
+	height: 4px;
+	margin-top: 8px;
+	margin-left: 7px;
+}
+.sorting-indicator::before {
+    font: 400 20px/1 dashicons;
+    line-height: 1;
+    speak: none;
+    display: inline-block;
+    padding: 0;
+    top: -4px;
+    left: -8px;
+    line-height: 10px;
+    position: relative;
+    vertical-align: top;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-decoration: none !important;
+    color: #444;
+
+}
+th.sorted.asc .sorting-indicator:before,
+th.desc:hover span.sorting-indicator:before,
+th.desc a:focus span.sorting-indicator:before {
+	content: "\f142";
+}
+th.sorted.desc .sorting-indicator:before,
+th.asc:hover span.sorting-indicator:before,
+th.asc a:focus span.sorting-indicator:before {
+	content: "\f140";
+}
+th.sorted a span, th.sortable:hover a span {
+    visibility: visible;
+}
