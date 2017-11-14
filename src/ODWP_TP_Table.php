@@ -42,48 +42,6 @@ class ODWP_TP_Table {
     private $stories = [];
 
     /**
-     * @access private
-     * @param string $count
-     * @since 0.3
-     */
-    private $count = 0;
-
-    /**
-     * @access private
-     * @param bool $is_start
-     * @since 0.3
-     */
-    private $is_start = false;
-
-    /**
-     * @access private
-     * @param bool $is_end
-     * @since 0.3
-     */
-    private $is_end = false;
-
-    /**
-     * @access private
-     * @param string $base_url
-     * @since 0.3
-     */
-    private $base_url;
-
-    /**
-     * @access private
-     * @param string $prev_url
-     * @since 0.3
-     */
-    private $prev_url;
-
-    /**
-     * @access private
-     * @param string $next_url
-     * @since 0.3
-     */
-    private $next_url;
-
-    /**
      * Constructor.
      * @global string $odwptp_plugin_dir
      * @param array $args
@@ -99,47 +57,6 @@ class ODWP_TP_Table {
 
         include( $odwptp_plugin_dir . 'src/ODWP_TP_DataSource.php' );
         $this->ds = new ODWP_TP_DataSource( $args );
-    }
-
-    /**
-     * Renders HTML of our table.
-     * @since 0.3
-     */
-    public function render() {
-        $ret = $this->ds->get_data();
-?>
-<div class="odwptp-targetprocess_table_cont">
-    <?php if ( ( $ret instanceof WP_Error ) ) : ?>
-    <p class="odwptp-connection_error"><?php
-        printf(
-            __( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
-            '<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
-        );
-    ?></p>
-    <?php elseif ( $ret['response']['code'] != 200 ) : ?>
-    <p class="odwptp-connection_error"><?php
-        printf(
-            __( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba při spojení - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
-            '<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
-        );
-    ?></p>
-    <?php else :
-        $stories = $this->parse_user_stories( $ret );
-        $this->set_stories( $stories );
-
-        if ( $this->get_count() == 0 ) :
-            ?><p class="odwptp-connection_error"><?php
-                printf(
-                    __( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba při spojení - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
-                    '<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
-                );
-            ?></p><?php
-        endif;
-
-        $this->render_table();
-    endif; ?>
-</div>
-<?php
     }
 
     /**
@@ -198,49 +115,118 @@ class ODWP_TP_Table {
      * @since 0.3
      */
     public function get_count() {
-        return $this->count;
+        return count( $this->stories );
     }
 
+	/**
+     * @global WP $wp
+	 * @return string Returns URL of previous set of items.
+	 * @since 0.4
+	 */
+	public function get_prev_url() {
+	    global $wp;
+
+		if ( $this->is_start() ) {
+			return '#';
+        }
+
+        $params = $this->ds->get_params();
+		$params['skip'] = $params['skip'] - $params['take'];
+
+        return home_url( add_query_arg( $params, $wp->request ) );
+	}
+
+	/**
+	 * @global WP $wp
+	 * @return string Returns URL of previous set of items.
+	 * @since 0.4
+	 */
+	public function get_next_url() {
+		global $wp;
+
+		if ( $this->is_end() ) {
+			return '#';
+		}
+
+		$params = $this->ds->get_params();
+		$params['skip'] = $params['skip'] + $params['take'];
+
+		return home_url( add_query_arg( $params, $wp->request ) );
+	}
+
     /**
-     * Returns stories.
      * @return array Array of {@see ODWP_TP_UserStory}.
-     * @since 0.3
+     * @since 0.3 Returns stories.
      */
     public function get_stories() {
         return $this->stories;
     }
 
-    /**
-     * Sets stories and other private properties.
-     * @global WP $wp
-     * @param array $stories Array of {@see ODWP_TP_UserStory}.
-     * @since 0.3
-     */
-    public function set_stories( array $stories ) {
-        global $wp;
+	/**
+	 * Sets stories and other private properties.
+	 * @param array $stories Array of {@see ODWP_TP_UserStory}.
+	 * @since 0.3
+	 */
+	public function set_stories( array $stories ) {
+		$this->stories  = $stories;
+	}
 
-        $this->stories  = $stories;
-        $this->count    = count( $this->stories );
-        $this->is_start = ( $this->ds->get_skip() == 0 );
-        $this->is_end   = ( $this->count < $this->ds->get_take() );
-        $this->base_url = home_url( $wp->request );
-        $this->prev_url = home_url(
-            add_query_arg( [
-                'take'  => $this->ds->get_take(),
-                'skip'  => $this->ds->get_skip(),
-                'where' => $this->ds->get_where(),
-                'prev'  => 1
-            ], $wp->request
-        ) );
-        $this->next_url = home_url(
-            add_query_arg( [
-                'take'  => $this->ds->get_take(),
-                'skip'  => $this->ds->get_skip(),
-                'where' => $this->ds->get_where(),
-                'next'  => 1
-            ], $wp->request
-        ) );
+	/**
+	 * @return bool Returns TRUE if we are on the start of items list.
+     * @since 0.4
+	 */
+    public function is_start() {
+        return ( $this->ds->get_skip() === 0 );
     }
+
+	/**
+	 * @return bool Returns TRUE if we are on the end of items list.
+     * @since 0.4
+	 */
+    public function is_end() {
+        return ( $this->get_count() < $this->ds->get_take() );
+    }
+
+	/**
+	 * Renders HTML of our table.
+	 * @since 0.3
+	 */
+	public function render() {
+		$ret = $this->ds->get_data();
+		?>
+        <div class="odwptp-targetprocess_table_cont">
+			<?php if ( ( $ret instanceof WP_Error ) ) : ?>
+                <p class="odwptp-connection_error"><?php
+					printf(
+						__( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
+						'<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
+					);
+					?></p>
+			<?php elseif ( $ret['response']['code'] != 200 ) : ?>
+                <p class="odwptp-connection_error"><?php
+					printf(
+						__( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba při spojení - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
+						'<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
+					);
+					?></p>
+			<?php else :
+				$stories = $this->parse_user_stories( $ret );
+				$this->set_stories( $stories );
+
+				if ( $this->get_count() == 0 ) :
+					?><p class="odwptp-connection_error"><?php
+					printf(
+						__( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba při spojení - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
+						'<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
+					);
+					?></p><?php
+				endif;
+
+				$this->render_table();
+			endif; ?>
+        </div>
+		<?php
+	}
 
     /**
      * @internal Renders table.
@@ -265,16 +251,16 @@ class ODWP_TP_Table {
 ?>
 <div class="tablenav <?= $position ?>">
     <div class="tablenav-pages">
-        <span class="displaying-num"><?php printf( __( 'Zobrazeno položek: %d', 'odwptp' ), $this->count ) ?></span>
-        <?php if ( ! ( $this->is_start && $this->is_end ) ) : ?>
+        <span class="displaying-num"><?php printf( __( 'Zobrazeno položek: %d', 'odwptp' ), $this->get_count() ) ?></span>
+        <?php if ( ! ( $this->is_start() && $this->is_end() ) ) : ?>
         <span class="pagination-links">
-            <?php if ( ! $this->is_start ) : ?>
-            <a class="prev-page" href="<?= $this->prev_url ?>"><?php _e( 'Předchozí', 'odwptp' ) ?></a>
+            <?php if ( ! $this->is_start() ) : ?>
+            <a class="prev-page" href="<?= $this->get_prev_url() ?>"><?php _e( 'Předchozí', 'odwptp' ) ?></a>
             <?php else : ?>
             <span class="prev-page"><?php _e( 'Předchozí', 'odwptp' ) ?></span>
             <?php endif ?>
-            <?php if ( ! $this->is_end ) : ?>
-            <a class="next-page" href="<?= $this->next_url ?>"><?php _e( 'Následující', 'odwptp' ) ?></a>
+            <?php if ( ! $this->is_end() ) : ?>
+            <a class="next-page" href="<?= $this->get_next_url() ?>"><?php _e( 'Následující', 'odwptp' ) ?></a>
             <?php else : ?>
             <span class="next-page"><?php _e( 'Následující', 'odwptp' ) ?></span>
             <?php endif ?>
@@ -365,30 +351,6 @@ class ODWP_TP_Table {
         <td><?php echo $story->get_contract_type() ?></td>
     </tr>
 <?php
-    }
-
-    /**
-     * Returns URL to previous items.
-     * @return string Returns "#" if there are no previous items.
-     * @since 0.3
-     */
-    public function get_prev_items_url() {
-        $params = $this->ds->get_params();
-
-        if ( $params['skip'] == 0 ) {
-            return '#';
-        }
-
-        // XXX Finish `ODWP_TP_Table::get_prev_items_url`!
-    }
-
-    /**
-     * Returns URL to next items.
-     * @return string
-     * @since 0.3
-     */
-    public function get_next_items_url() {
-        // XXX Finish `ODWP_TP_Table::get_next_items_url`!
     }
 }
 
