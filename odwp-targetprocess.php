@@ -3,7 +3,7 @@
  * Plugin Name: odwp-targetprocess
  * Plugin URI: https://github.com/ondrejd/odwp-targetprocess
  * Description: Plugin that uses <a href="https://www.targetprocess.com/" target="blank">Targetprocess API</a> to publish <em>user stories</em> on your site.
- * Version: 0.2
+ * Version: 0.3
  * Author: Ondrej Donek
  * Author URI: https://ondrejd.com/
  * License: GPLv3
@@ -29,7 +29,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! function_exists( 'odwptp_settings_init' ) ) :
     /**
      * Initialize settings.
-     * @return void
      * @since 0.1
      */
     function odwptp_settings_init() {
@@ -79,7 +78,6 @@ add_action( 'admin_init', 'odwptp_settings_init' );
 if ( ! function_exists( 'odwptp_settings_section_cb' ) ) :
     /**
      * @internal Renders settings section.
-     * @return void
      * @since 0.1
      */
     function odwptp_settings_section_cb() {
@@ -100,7 +98,6 @@ endif;
 if ( ! function_exists( 'odwptp_settings_login_field_cb' ) ) :
     /**
      * @internal Renders input field for "login" setting.
-     * @return void
      * @since 0.1
      */
     function odwptp_settings_login_field_cb() {
@@ -115,7 +112,6 @@ endif;
 if ( ! function_exists( 'odwptp_settings_password_field_cb' ) ) :
     /**
      * @internal Renders input field for "password" setting.
-     * @return void
      * @since 0.1
      */
     function odwptp_settings_password_field_cb() {
@@ -130,7 +126,6 @@ endif;
 if ( ! function_exists( 'odwptp_settings_url_field_cb' ) ) :
     /**
      * @internal Renders input field for "url" setting.
-     * @return void
      * @since 0.1
      */
     function odwptp_settings_url_field_cb() {
@@ -146,8 +141,7 @@ endif;
 if ( ! function_exists( 'odwptp_check_connection_success_msg' ) ) :
     /**
      * Checks if user wants to hide connection success message forever.
-     * @return void
-     * @since 0.1
+     * @since 0.2
      */
     function odwptp_check_connection_success_msg() {
         if ( isset( $_GET['disable_odwptp_success_msg'] ) ) {
@@ -166,7 +160,7 @@ if ( ! function_exists( 'odwptp_print_admin_notice' ) ) :
      * @param string $message
      * @param string $type (Optional.) Possible values: ["error", "warning", "success", "info"]. Defaultly "info".
      * @param boolean $dismissible (Optional.) Defaultly `TRUE`.
-     * @since 0.1
+     * @since 0.2
      */
     function odwptp_print_admin_notice( $message, $type = 'info', $dismissible = true ) {
         $classes = 'notice';
@@ -187,13 +181,14 @@ if ( ! function_exists( 'odwptp_print_admin_notice' ) ) :
 endif;
 
 
-if ( ! function_exists( 'odwptp_check_credentials' ) ) :
+if ( ! function_exists( 'odwptp_call_targetprocess' ) ) :
     /**
-     * Checks Targetprocess credentials.
-     * @return void
-     * @since 0.1
+     * Makes call to Targetprocess API.
+     * @param string $call
+     * @return array|WP_ERROR
+     * @since 0.3
      */
-    function odwptp_check_credentials() {
+    function odwptp_call_targetprocess( $call ) {
         $login = get_option( 'odwptp_login' );
         $password = get_option( 'odwptp_password' );
         $url = get_option( 'odwptp_url' );
@@ -206,17 +201,31 @@ if ( ! function_exists( 'odwptp_check_credentials' ) ) :
                     admin_url( 'options-general.php#odwptp-settings' )
                 ), 'warning' );
             } );
-            return;
+
+            return new WP_Error( 'no-credentials', __( 'Nezadali jste přístupové údaje ke službě TargetProcess!', 'odwptp' ) );
         }
 
         // Check the credentials
-        $url = rtrim( $url, '/' ) . '/api/v1/Context/';
+        $url = rtrim( $url, '/' ) . $call;
         $ret = wp_remote_request( $url, [
             'headers' => [
                 'Authorization' => 'Basic ' . base64_encode( $login . ':' . $password ),
                 'Accept' => 'application/json',
             ],
         ] );
+
+        return $ret;
+    }
+endif;
+
+
+if ( ! function_exists( 'odwptp_check_credentials' ) ) :
+    /**
+     * Checks Targetprocess credentials.
+     * @since 0.2
+     */
+    function odwptp_check_credentials() {
+        $ret = odwptp_call_targetprocess( '/api/v1/Context/' );
 
         // Control request did not end well
         if ( ( $ret instanceof WP_Error ) ) {
@@ -274,8 +283,7 @@ if ( ! function_exists( 'odwptp_check_wp_http_block_external' ) ) :
     /**
      * Checks if constant WP_HTTP_BLOCK_EXTERNAL isn't set `true`
      * in `wp-config.php` file because it will block our requests.
-     * @return void
-     * @since 0.1
+     * @since 0.2
      */
     function odwptp_check_wp_http_block_external() {
         if ( ! defined( 'WP_HTTP_BLOCK_EXTERNAL' ) ) {
@@ -297,6 +305,103 @@ if ( ! function_exists( 'odwptp_check_wp_http_block_external' ) ) :
 endif;
 
 add_action( 'admin_init', 'odwptp_check_wp_http_block_external' );
+
+
+if ( ! function_exists( 'odwptp_shortcode_add' ) ) :
+    /**
+     * Registers our shortcode "targetprocess-table" with displayed user stories.
+     * @param array $atts
+     * @return string
+     * @since 0.3
+     */
+    function odwptp_shortcode_add( $atts ) {
+        $a = shortcode_atts( [
+            'take'  => 100,
+            'skip'  => 0,
+            'title' => '',
+        ], $atts );
+
+        ob_start();
+        $table = new ODWP_TP_Table( $a );
+        $table->render();
+
+        return ob_get_clean();
+    }
+endif;
+
+add_shortcode( 'targetprocess-table', 'odwptp_shortcode_add' );
+
+
+/**
+ * @var string $odwptp_plugin_dir
+ * @since 0.3
+ */
+$odwptp_plugin_dir = plugin_dir_path( __FILE__ );
+
+// Load all classes
+include( $odwptp_plugin_dir . 'src/ODWP_TP_UserStory.php' );
+include( $odwptp_plugin_dir . 'src/ODWP_TP_Table.php' );
+
+
+if ( ! function_exists( 'odwptp_shrotcode_button_init' ) ) :
+    /**
+     * Registers TinyMCE button for our shortcode.
+     * @since 0.3
+     */
+    function odwptp_shrotcode_button_init() {
+        if ( ! current_user_can( 'edit_posts' ) && ! current_user_can( 'edit_pages' ) && get_user_option( 'rich_editing' ) == 'true' ) {
+            return;
+        }
+
+        add_filter( 'mce_external_plugins', 'odwptp_tinymce_external_plugins' );
+        add_filter( 'mce_buttons', 'odwptp_add_tinymce_button' );
+    }
+endif;
+
+add_action( 'admin_init', 'odwptp_shrotcode_button_init' );
+
+
+if ( ! function_exists( 'odwptp_tinymce_external_plugins' ) ) :
+    /**
+     * @internal Adds our plugin into the TinyMCE.
+     * @param array $plugins
+     * @return array
+     * @since 0.3
+     * @todo Translate TinyMCE plugin!
+     */
+    function odwptp_tinymce_external_plugins( $plugins ) {
+        $plugins['odwptp_targetprocess_table'] = plugins_url( 'assets/js/targetprocess_table-shortcode.js', __FILE__ );
+        return $plugins;
+    }
+endif;
+
+
+if ( ! function_exists( 'odwptp_add_tinymce_button' ) ) :
+    /**
+     * @internal Adds TinyMCE button.
+     * @param array $buttons
+     * @return array
+     * @since 0.3
+     */
+    function odwptp_add_tinymce_button( $buttons ) {
+        //Add the button ID to the $button array
+        $buttons[] = 'odwptp_targetprocess_table';
+        return $buttons;
+    }
+endif;
+
+
+if ( ! function_exists( 'odwptp_add_stylesheet' ) ) :
+    /**
+     * @internal Adds our stylesheet.
+     * @since 0.3
+     */
+    function odwptp_add_stylesheet() {
+        wp_enqueue_style( 'odwp-targetprocess', plugins_url( 'assets/css/public.css', __FILE__ ) );
+    }
+endif;
+
+add_action( 'wp_head', 'odwptp_add_stylesheet' );
 
 
 if ( ! function_exists( 'odwptp_xxx' ) ) :

@@ -32,17 +32,51 @@ When your `wp-config.php` settings block external requests:
 
 ![Error - external requests are blocked](screenshot-5.png)
 
+### Shortcode for TinyMCE
+
+When you editing posts or pages you can easily add our shortcode with table with user stories:
+
+![TinyMCE button](screenshot-6.png)
+
 ## TODO
 
 * [x] ~~create settings with `odwptp_login` and `odwptp_password` (using [Settings API][4])~~
 * [x] ~~if `odwptp_login` and `odwptp_password` are set try to get [token][3]~~
   - [x] ~~__FIXME__ check if `WP_HTTP_BLOCK_EXTERNAL` is _false_ and take an action if not~~
   - [x] ~~__FIXME__ Success message should react on "Don't show again" link~~
-* [ ] create shortcode which will present the data on the front-end
+* [ ] __create shortcode `targetprocess-table` which will present the data on the front-end__
+  - [x] ~~add TinyMCE button with our shortcode (including configuration dialog)~~
+  - [ ] add basic table features: pagination, sorting, filtering
+  - [ ] __FIXME__ script for shortcode's TinyMCE button should be localized
 * [x] ~~add setting `odwptp_url` which holds URL of Targetprocess API serverhost~~
 * [ ] enable localization (Czech and English)
+
+## Changelog
+
+__Note:__ Versions are in reverse order.
+
+### Version 0.4 _(in development)_
+
+* finished `targetprocess-table` shortcode
+* fixed remaining issues
+* prepared for first release
+
+### Version 0.3
+
+* added initial version of `targetprocess-table` shortcode
+* added TinyMCE button for our shortcode
+
+### Version 0.2
+
+* finished plugin settings
+
+### Version 0.1
+
+* initial version
+* created [GitHub repository][5]
 
 [1]: https://wordpress.org/
 [2]: https://www.targetprocess.com/
 [3]: https://dev.targetprocess.com/docs/authentication
 [4]: https://developer.wordpress.org/plugins/settings/settings-api/
+[5]: https://github.com/ondrejd/odwp-targetprocess
