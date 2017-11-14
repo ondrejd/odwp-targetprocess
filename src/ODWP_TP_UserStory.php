@@ -64,12 +64,11 @@ class ODWP_TP_UserStory {
     /**
      * Constructor.
      * @param array $args
-     * @return void
      * @since 0.3
      */
     public function __construct( $args = [] ) {
         if ( isset( $args['id'] ) ) {
-            $this->id = intval( $args['id'] );
+            $this->id = (int) $args['id'];
         }
 
         if ( isset( $args['role'] ) ) {

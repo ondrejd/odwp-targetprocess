@@ -87,7 +87,6 @@ class ODWP_TP_Table {
      * Constructor.
      * @global string $odwptp_plugin_dir
      * @param array $args
-     * @return void
      * @since 0.3
      */
     public function __construct( array $args ) {
@@ -104,7 +103,6 @@ class ODWP_TP_Table {
 
     /**
      * Renders HTML of our table.
-     * @return void
      * @since 0.3
      */
     public function render() {
@@ -216,7 +214,6 @@ class ODWP_TP_Table {
      * Sets stories and other private properties.
      * @global WP $wp
      * @param array $stories Array of {@see ODWP_TP_UserStory}.
-     * @return void
      * @since 0.3
      */
     public function set_stories( array $stories ) {
@@ -224,28 +221,29 @@ class ODWP_TP_Table {
 
         $this->stories  = $stories;
         $this->count    = count( $this->stories );
-        $this->is_start = ( $this->ds->skip == 0 );
-        $this->is_end   = ( $this->count < $this->ds->take );
+        $this->is_start = ( $this->ds->get_skip() == 0 );
+        $this->is_end   = ( $this->count < $this->ds->get_take() );
         $this->base_url = home_url( $wp->request );
         $this->prev_url = home_url(
             add_query_arg( [
-                'count' => $this->count,
-                'skip'  => $this->ds->skip,
-                'prev' => 1
+                'take'  => $this->ds->get_take(),
+                'skip'  => $this->ds->get_skip(),
+                'where' => $this->ds->get_where(),
+                'prev'  => 1
             ], $wp->request
         ) );
         $this->next_url = home_url(
             add_query_arg( [
-                'count' => $this->count,
-                'skip' => $this->ds->skip,
-                'next' => 1
+                'take'  => $this->ds->get_take(),
+                'skip'  => $this->ds->get_skip(),
+                'where' => $this->ds->get_where(),
+                'next'  => 1
             ], $wp->request
         ) );
     }
 
     /**
      * @internal Renders table.
-     * @return void
      * @since 0.3
      */
     protected function render_table() {
@@ -261,7 +259,6 @@ class ODWP_TP_Table {
     /**
      * @internal Renders table navigation.
      * @param string $position (Optional.)
-     * @return void
      * @since 0.3
      */
     protected function render_tablenav( $position = self::POSITION_TOP ) {
@@ -291,7 +288,6 @@ class ODWP_TP_Table {
     /**
      * @internal Renders thead element.
      * @param string $position (Optional.)
-     * @return void
      * @since 0.3
      */
     protected function render_thead( $position = self::POSITION_TOP ) {
@@ -341,7 +337,6 @@ class ODWP_TP_Table {
 
     /**
      * @internal Renders tbody element.
-     * @return void
      * @since 0.3
      */
     protected function render_tbody() {
@@ -357,7 +352,6 @@ class ODWP_TP_Table {
     /**
      * @internal Renders tbody's tr element.
      * @param ODWP_TP_UserStory $story
-     * @return void
      * @since 0.3
      */
     protected function render_tbody_row( ODWP_TP_UserStory $story ) {

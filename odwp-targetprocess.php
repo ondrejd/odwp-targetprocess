@@ -29,7 +29,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! function_exists( 'odwptp_settings_init' ) ) :
     /**
      * Initialize settings.
-     * @return void
      * @since 0.1
      */
     function odwptp_settings_init() {
@@ -79,7 +78,6 @@ add_action( 'admin_init', 'odwptp_settings_init' );
 if ( ! function_exists( 'odwptp_settings_section_cb' ) ) :
     /**
      * @internal Renders settings section.
-     * @return void
      * @since 0.1
      */
     function odwptp_settings_section_cb() {
@@ -100,7 +98,6 @@ endif;
 if ( ! function_exists( 'odwptp_settings_login_field_cb' ) ) :
     /**
      * @internal Renders input field for "login" setting.
-     * @return void
      * @since 0.1
      */
     function odwptp_settings_login_field_cb() {
@@ -115,7 +112,6 @@ endif;
 if ( ! function_exists( 'odwptp_settings_password_field_cb' ) ) :
     /**
      * @internal Renders input field for "password" setting.
-     * @return void
      * @since 0.1
      */
     function odwptp_settings_password_field_cb() {
@@ -130,7 +126,6 @@ endif;
 if ( ! function_exists( 'odwptp_settings_url_field_cb' ) ) :
     /**
      * @internal Renders input field for "url" setting.
-     * @return void
      * @since 0.1
      */
     function odwptp_settings_url_field_cb() {
@@ -146,7 +141,6 @@ endif;
 if ( ! function_exists( 'odwptp_check_connection_success_msg' ) ) :
     /**
      * Checks if user wants to hide connection success message forever.
-     * @return void
      * @since 0.2
      */
     function odwptp_check_connection_success_msg() {
@@ -191,7 +185,7 @@ if ( ! function_exists( 'odwptp_call_targetprocess' ) ) :
     /**
      * Makes call to Targetprocess API.
      * @param string $call
-     * @return void
+     * @return array|WP_ERROR
      * @since 0.3
      */
     function odwptp_call_targetprocess( $call ) {
@@ -207,7 +201,8 @@ if ( ! function_exists( 'odwptp_call_targetprocess' ) ) :
                     admin_url( 'options-general.php#odwptp-settings' )
                 ), 'warning' );
             } );
-            return;
+
+            return new WP_Error( 'no-credentials', __( 'Nezadali jste přístupové údaje ke službě TargetProcess!', 'odwptp' ) );
         }
 
         // Check the credentials
@@ -227,7 +222,6 @@ endif;
 if ( ! function_exists( 'odwptp_check_credentials' ) ) :
     /**
      * Checks Targetprocess credentials.
-     * @return void
      * @since 0.2
      */
     function odwptp_check_credentials() {
@@ -289,7 +283,6 @@ if ( ! function_exists( 'odwptp_check_wp_http_block_external' ) ) :
     /**
      * Checks if constant WP_HTTP_BLOCK_EXTERNAL isn't set `true`
      * in `wp-config.php` file because it will block our requests.
-     * @return void
      * @since 0.2
      */
     function odwptp_check_wp_http_block_external() {
@@ -318,12 +311,12 @@ if ( ! function_exists( 'odwptp_shortcode_add' ) ) :
     /**
      * Registers our shortcode "targetprocess-table" with displayed user stories.
      * @param array $atts
-     * @return void
+     * @return string
      * @since 0.3
      */
     function odwptp_shortcode_add( $atts ) {
         $a = shortcode_atts( [
-            'rows'  => 100,
+            'take'  => 100,
             'skip'  => 0,
             'title' => '',
         ], $atts );
@@ -353,7 +346,6 @@ include( $odwptp_plugin_dir . 'src/ODWP_TP_Table.php' );
 if ( ! function_exists( 'odwptp_shrotcode_button_init' ) ) :
     /**
      * Registers TinyMCE button for our shortcode.
-     * @return void
      * @since 0.3
      */
     function odwptp_shrotcode_button_init() {
@@ -375,6 +367,7 @@ if ( ! function_exists( 'odwptp_tinymce_external_plugins' ) ) :
      * @param array $plugins
      * @return array
      * @since 0.3
+     * @todo Translate TinyMCE plugin!
      */
     function odwptp_tinymce_external_plugins( $plugins ) {
         $plugins['odwptp_targetprocess_table'] = plugins_url( 'assets/js/targetprocess_table-shortcode.js', __FILE__ );
@@ -401,7 +394,6 @@ endif;
 if ( ! function_exists( 'odwptp_add_stylesheet' ) ) :
     /**
      * @internal Adds our stylesheet.
-     * @return void
      * @since 0.3
      */
     function odwptp_add_stylesheet() {

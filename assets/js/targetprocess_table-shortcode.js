@@ -4,6 +4,7 @@
  * @license https://www.gnu.org/licenses/gpl-3.0.en.html GNU General Public License 3.0
  * @package odwp-targetprocess
  * @since 0.3
+ * @todo Translate strings!
  */
 
 jQuery( document ).ready( function( $ ) {
@@ -11,7 +12,7 @@ jQuery( document ).ready( function( $ ) {
         init : function( ed, url) {
             ed.addCommand( 'odwptp_insert_targetprocess_table', function() {
                 var defaults = {
-                    rows: 100,
+                    take: 100,
                     title: ''
                 };
 
@@ -25,18 +26,18 @@ jQuery( document ).ready( function( $ ) {
                         value: defaults.title,
                         onchange: function() { data.title = this.value(); }
                     }, {
-                        name: 'rows',
+                        name: 'take',
                         type: 'textbox',
                         label: 'Rows',
-                        value: defaults.rows,
-                        onchange: function() { data.rows = this.value(); }
+                        value: defaults.take,
+                        onchange: function() { data.take = this.value(); }
                     }],
                     onSubmit: function(e) {
                         var html = '[targetprocess-table ';
                                 tinymce.extend( defaults, e.data );
 
                         html += ' title="' + e.data.title + '"';
-                        html += ' rows="' + e.data.rows + '"';
+                        html += ' take="' + e.data.take + '"';
                         html += ']';
 
                         tinymce.execCommand( 'mceInsertContent', false, html );

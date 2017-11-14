@@ -23,17 +23,18 @@ if ( ! class_exists( 'ODWP_TP_DataSource' ) ) :
  * @since 0.3
  */
 class ODWP_TP_DataSource {
-    /**
-     * @var int $take
-     * @since 0.3
-     */
-    protected $take;
 
     /**
      * @var int $skip
      * @since 0.3
      */
     protected $skip;
+
+	/**
+	 * @var int $take
+	 * @since 0.3
+	 */
+	protected $take;
 
     /**
      * @var string $where
@@ -43,7 +44,6 @@ class ODWP_TP_DataSource {
 
     /**
      * Constructor.
-     * @return void
      * @since 0.3
      */
     public function __construct() {
@@ -55,35 +55,42 @@ class ODWP_TP_DataSource {
         $this->where = filter_input( INPUT_GET, 'where' );
     }
 
-    /**
-     * Default getter.
-     * @param string $key
-     * @return mixed
-     * @since 0.3
-     */
-    public function __get( $key ) {
-        switch( $key ) {
-            case 'params': return $this->get_params();
-            case 'skip'  : return $this->skip;
-            case 'take'  : return $this->take;
-            case 'where' : return $this->where;
-        }
-
-        return null;
-    }
+	/**
+	 * Returns parameters of the datasource as an array.
+	 * @return array
+	 * @since 0.3
+	 */
+	public function get_params() {
+		return [
+			'skip' => $this->skip,
+			'take' => $this->take,
+			'where' => $this->where,
+		];
+	}
 
     /**
-     * Returns parameters of the datasource as an array.
-     * @return array
+     * @return integer
      * @since 0.3
      */
-    public function get_params() {
-        return [
-            'take' => $this->take,
-            'skip' => $this->skip,
-            'where' => $this->where,
-        ];
+    public function get_skip() {
+        return (int) $this->skip;
     }
+
+	/**
+	 * @return integer
+	 * @since 0.3
+	 */
+	public function get_take() {
+		return (int) $this->take;
+	}
+
+	/**
+	 * @return string
+	 * @since 0.3
+	 */
+	public function get_where() {
+		return $this->where;
+	}
 
     /**
      * Returns URL of the datasource.
@@ -93,21 +100,23 @@ class ODWP_TP_DataSource {
     public function get_url() {
         $base_url  = get_option( 'odwptp_url' );
         $url       = $base_url . '/api/v1/UserStories/';
-        $params    = [];
-
-        if ( $this->take > 0 ) {
-            $params['take'] = $this->take;
-        }
+        /*$params    = [];
 
         if ( $this->skip > 0 ) {
             $params['skip'] = $this->skip;
         }
 
+	    if ( $this->take > 0 ) {
+		    $params['take'] = $this->take;
+	    }
+
         if ( ! empty( $this->where ) ) {
             $params['where'] = $this->where;
-        }
+        }*/
 
-        if ( count( $params ) <= 0 ) {
+	    $params    = $this->get_params();
+
+	    if ( count( $params ) <= 0 ) {
             return $url;
         }
 
@@ -127,7 +136,6 @@ class ODWP_TP_DataSource {
     public function get_data() {
         $login    = get_option( 'odwptp_login' );
         $password = get_option( 'odwptp_password' );
-        $base_url = get_option( 'odwptp_url' );
         $call_url = $this->get_url();
 
         // Credentials are not set
