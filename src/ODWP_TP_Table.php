@@ -154,6 +154,17 @@ class ODWP_TP_Table {
 		return home_url( add_query_arg( $params, $wp->request ) );
 	}
 
+	/**
+	 * @global WP $wp
+	 * @return string Returns URL for sorting anchors.
+	 * @since 0.4
+	 */
+	public function get_sort_url() {
+	    global $wp;
+
+	    //...
+    }
+
     /**
      * @return array Array of {@see ODWP_TP_UserStory}.
      * @since 0.3 Returns stories.
@@ -281,7 +292,7 @@ class ODWP_TP_Table {
     <thead class="thead-<?= $position ?>">
         <tr>
             <th class="column-id column-primary sorted desc" scope="col">
-                <a href="#">
+                <a href="<?= $this->get_sort_url()?>">
                     <span><?php _e( 'ID', 'odwptp' ) ?></span>
                     <span class="sorting-indicator"></span>
                 </a>
