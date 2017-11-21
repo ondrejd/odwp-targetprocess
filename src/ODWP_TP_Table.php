@@ -375,7 +375,7 @@ class ODWP_TP_Table {
     protected function render_tbody_row( ODWP_TP_UserStory $story ) {
 ?>
     <tr class="first-row-of-one" id="first-row-of-one-<?php echo $story->get_id()?>">
-        <th scope="row"><a href="#"><?php echo $story->get_id() ?></a></th>
+        <th class="column-id" scope="row"><a href="#"><?php echo $story->get_id() ?></a></th>
         <td><?php echo $story->get_role() ?></td>
         <td><?php echo $story->get_tags() ?></td>
         <td><?php echo $story->get_min_md_rate() ?></td>

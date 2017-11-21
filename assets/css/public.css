@@ -81,7 +81,15 @@ th.sorted a span, th.sortable:hover a span {
     visibility: visible;
 }
 
-.first-row-of-one {}
+.first-row-of-one {
+    cursor: pointer;
+}
+.first-row-of-one:hover th.column-id a {
+    text-decoration: none !important;
+}
+.first-row-of-one:hover {
+    background-color: #ff0;
+}
 .second-row-of-one {
     padding: 5px 20px;
     font-size: 95%;
@@ -89,6 +97,7 @@ th.sorted a span, th.sortable:hover a span {
 .second-row-of-one.hidden {
     visibility: collapse;
 }
-.second-row-of-one span.description {
+.second-row-of-one td span.description {
     text-style: italic;
+    text-decoration: olive;
 }
