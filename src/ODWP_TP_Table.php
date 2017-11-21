@@ -162,6 +162,20 @@ class ODWP_TP_Table {
 	public function get_sort_url() {
 	    global $wp;
 
+		$key1 = $this->ds->get_orderby();
+		$key2 = $this->ds->get_orderbydesc();
+
+		/**
+		 * @param mixed $param
+		 * @return string Returns either. "ASC" or "DESC".
+		 */
+		$t = function( $param ) {
+			//...
+			$orderby = filter_input( INPUT_GET, 'orderby' );
+			$orderbydesc = filter_input( INPUT_GET, 'orderbydesc' );
+			//...
+		};
+
 	    //...
     }
 
@@ -244,12 +258,19 @@ class ODWP_TP_Table {
      * @since 0.3
      */
     protected function render_table() {
-        $this->render_tablenav();
 ?>
-<table id="odwptp-targetprocess_table" class="targetprocess-table">
-    <?php $this->render_thead() ?>
-    <?php $this->render_tbody() ?>
-</table>
+<div class="targetprocess-table-cont">
+    <?php if ( ! empty( $this->title ) ) :?>
+    <h2><?=$this->title?></h2>
+    <?php endif?>
+    <div class="row">
+        <?php $this->render_tablenav()?>
+    </div>
+    <table id="odwptp-targetprocess_table" class="targetprocess-table">
+        <?php $this->render_thead() ?>
+        <?php $this->render_tbody() ?>
+    </table>
+</div>
 <?php
     }
 
@@ -292,37 +313,37 @@ class ODWP_TP_Table {
     <thead class="thead-<?= $position ?>">
         <tr>
             <th class="column-id column-primary sorted desc" scope="col">
-                <a href="<?= $this->get_sort_url()?>">
+                <a href="<?= $this->get_sort_url( 'Id' )?>">
                     <span><?php _e( 'ID', 'odwptp' ) ?></span>
                     <span class="sorting-indicator"></span>
                 </a>
             </th>
             <th class="column-role sortable" scope="col">
-                <a href="#">
+                <a href="<?= $this->get_sort_url( 'CustomFields.Role' )?>">
                     <span><?php _e( 'Role', 'odwptp' ) ?></span>
                     <span class="sorting-indicator"></span>
                 </a>
             </th>
-            <th class="column-role sortable" scope="col">
-                <a href="#">
+            <th class="column-tags sortable" scope="col">
+                <a href="<?= $this->get_sort_url( 'Tags' )?>">
                     <span><?php _e( 'Tagy', 'odwptp' ) ?></span>
                     <span class="sorting-indicator"></span>
                 </a>
             </th>
-            <th class="column-role sortable" scope="col">
-                <a href="#">
+            <th class="column-min_md_rate sortable" scope="col">
+                <a href="<?= $this->get_sort_url( 'CustomFields.Minimal MD rate' )?>">
                     <span><?php _e( 'Min. MD rate', 'odwptp' ) ?></span>
                     <span class="sorting-indicator"></span>
                 </a>
             </th>
-            <th class="column-role sortable" scope="col">
-                <a href="#">
+            <th class="column-opt_md_rate sortable" scope="col">
+                <a href="<?= $this->get_sort_url( 'CustomFields.Optimal MD rate' )?>">
                     <span><?php _e( 'Opt. MD rate', 'odwptp' ) ?></span>
                     <span class="sorting-indicator"></span>
                 </a>
             </th>
-            <th class="column-role sortable" scope="col">
-                <a href="#">
+            <th class="column-contract_type sortable" scope="col">
+                <a href="<?= $this->get_sort_url( 'CustomFields.Contract Type' )?>">
                     <span><?php _e( 'Typ kontraktu', 'odwptp' ) ?></span>
                     <span class="sorting-indicator"></span>
                 </a>
@@ -353,13 +374,16 @@ class ODWP_TP_Table {
      */
     protected function render_tbody_row( ODWP_TP_UserStory $story ) {
 ?>
-    <tr>
-        <th scope="row"><?php echo $story->get_id() ?></th>
+    <tr class="first-row-of-one" id="first-row-of-one-<?php echo $story->get_id()?>">
+        <th scope="row"><a href="#"><?php echo $story->get_id() ?></a></th>
         <td><?php echo $story->get_role() ?></td>
         <td><?php echo $story->get_tags() ?></td>
         <td><?php echo $story->get_min_md_rate() ?></td>
         <td><?php echo $story->get_opt_md_rate() ?></td>
         <td><?php echo $story->get_contract_type() ?></td>
+    </tr>
+    <tr class="second-row-of-one hidden" id="second-row-of-one-<?php echo $story->get_id()?>">
+        <td colspan="6"><?php echo $story->get_description( true )?></td>
     </tr>
 <?php
     }

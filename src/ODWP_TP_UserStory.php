@@ -145,10 +145,16 @@ class ODWP_TP_UserStory {
     }
 
     /**
+     * @param boolean $show_empty_msg Optional, defaultly FALSE.
      * @return string Description of the user story.
      * @since 0.3
+     * @since 0.4 Parameter `$show_empty_msg` added.
      */
-    public function get_description() {
+    public function get_description( $show_empty_msg = false ) {
+        if ( empty( $this->description ) && $show_empty_msg === true ) {
+            return '<span class="description">' . __( 'Popisek nebyl zadán.', 'odwptp' ) . '</span>';
+        }
+
         return $this->description;
     }
 }

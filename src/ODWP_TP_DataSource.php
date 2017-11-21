@@ -63,30 +63,8 @@ class ODWP_TP_DataSource {
         $this->take = isset( $args['take'] )  ? (int) $args['take'] : 15;
         $this->skip = isset( $args['skip'] )  ? (int) $args['skip'] : 0;
         $this->where = isset( $args['where'] )  ? $args['where'] : '';
-
-        // Override these with those in GET (if there are any)
-
-	    if ( isset( $_GET['take'] ) ) {
-	    	$this->take = (int) filter_input( INPUT_GET, 'take', FILTER_VALIDATE_INT );
-	    }
-
-        if ( isset( $_GET['skip'] ) ) {
-	        $this->skip = (int) filter_input( INPUT_GET, 'skip', FILTER_VALIDATE_INT );
-        }
-
-        if ( isset( $_GET['where'] ) ) {
-	    	$this->where = filter_input( INPUT_GET, 'where' );
-        }
-
-        // Sort (orderby/orderbydesc)
-
-	    if ( isset( $_GET['orderby'] ) ) {
-		    $this->orderby = filter_input( INPUT_GET, 'orderby' );
-	    }
-
-	    if ( isset( $_GET['orderbydesc'] ) ) {
-		    $this->orderbydesc = filter_input( INPUT_GET, 'orderbydesc' );
-	    }
+	    $this->orderby = isset( $args['orderby'] )  ? $args['orderby'] : '';
+	    $this->orderbydesc = isset( $args['orderbydesc'] )  ? $args['orderbydesc'] : '';
     }
 
 	/**

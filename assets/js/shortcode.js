@@ -4,6 +4,7 @@
  * @license https://www.gnu.org/licenses/gpl-3.0.en.html GNU General Public License 3.0
  * @package odwp-targetprocess
  * @since 0.3
+ * @since 0.4 File renamed to `shortcode.js`.
  * @todo Translate strings!
  */
 

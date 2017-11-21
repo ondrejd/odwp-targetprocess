@@ -48,6 +48,7 @@ When you editing posts or pages you can easily add our shortcode with table with
   - [x] ~~add TinyMCE button with our shortcode (including configuration dialog)~~
   - [ ] add basic table features: pagination, sorting, filtering
   - [ ] __FIXME__ script for shortcode's TinyMCE button should be localized
+  - [x] ~~_UserStory->Description_ should be visible in the table after click~~
 * [x] ~~add setting `odwptp_url` which holds URL of Targetprocess API serverhost~~
 * [ ] enable localization (Czech and English)
 
