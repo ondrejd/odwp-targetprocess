@@ -49,19 +49,30 @@ When you editing posts or pages you can easily add our shortcode with table with
   - [x] ~~add TinyMCE button with our shortcode (including configuration dialog)~~
   - [ ] add basic table features: ~~pagination, sorting,~~ __TODO filtering !!!__
   - [x] ~~_UserStory->Description_ should be visible in the table after click~~
+  - [ ] __add AJAX support (pagination, sorting, filtering should be done without whole page's reload)__
 * [x] ~~add setting `odwptp_url` which holds URL of Targetprocess API serverhost~~
-* [ ] enable localization (Czech and English)
-  - [ ] __FIXME__ script for shortcode's TinyMCE button should be localized
+* [ ] __enable localization (Czech and English)__
+  - [ ] __FIXME script for shortcode's TinyMCE button should be localized__
 
 ## Changelog
 
-__Note:__ Versions are in reverse order.
+__Note:__ Versions are in reverse order. If any version is marked as _in development_ that it means that bolded todos are mean for this version.
+
+### Version 0.6 _(future)_
+
+* refactor `ODWP_TP_Table::parse_user_stories` in way that user can fully customize their `targetprocess-table` shortcode
+
+### Version 0.5 _(in development)_
+
+* progress on `targetprocess-table` shortcode - added filtering and AJAX
+* fixed some small issues
+* prepared for the release
 
 ### Version 0.4
 
 * progress on `targetprocess-table` shortcode - added pagination and sorting
 * fixed some issues
-* prepared for first release
+* prepared for the first release
 
 ### Version 0.3
 

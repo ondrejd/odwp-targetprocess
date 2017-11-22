@@ -3,8 +3,8 @@
  * Plugin Name: odwp-targetprocess
  * Plugin URI: https://github.com/ondrejd/odwp-targetprocess
  * Description: Plugin that uses <a href="https://www.targetprocess.com/" target="blank">Targetprocess API</a> to publish <em>user stories</em> on your site.
- * Version: 0.4
- * Author: Ondrej Donek
+ * Version: 0.5
+ * Author: Ondřej Doněk
  * Author URI: https://ondrejd.com/
  * License: GPLv3
  * Requires at least: 4.7
