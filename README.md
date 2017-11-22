@@ -57,7 +57,7 @@ When you editing posts or pages you can easily add our shortcode with table with
 
 __Note:__ Versions are in reverse order.
 
-### Version 0.4 _(in development)_
+### Version 0.4
 
 * progress on `targetprocess-table` shortcode - added pagination and sorting
 * fixed some issues
