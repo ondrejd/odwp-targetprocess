@@ -4,7 +4,8 @@
 
 ## Main features
 
-* ...
+* shortcode `targetprocess-table` which displayes your data from [Targetprocess][2]
+* new settings on `WP Amin > Settings > General`
 
 ## Screenshots
 
@@ -44,13 +45,13 @@ When you editing posts or pages you can easily add our shortcode with table with
 * [x] ~~if `odwptp_login` and `odwptp_password` are set try to get [token][3]~~
   - [x] ~~__FIXME__ check if `WP_HTTP_BLOCK_EXTERNAL` is _false_ and take an action if not~~
   - [x] ~~__FIXME__ Success message should react on "Don't show again" link~~
-* [ ] __create shortcode `targetprocess-table` which will present the data on the front-end__
+* [x] ~~create shortcode `targetprocess-table` which will present the data on the front-end~~
   - [x] ~~add TinyMCE button with our shortcode (including configuration dialog)~~
-  - [ ] add basic table features: pagination, sorting, filtering
-  - [ ] __FIXME__ script for shortcode's TinyMCE button should be localized
+  - [ ] add basic table features: ~~pagination, sorting,~~ __TODO filtering !!!__
   - [x] ~~_UserStory->Description_ should be visible in the table after click~~
 * [x] ~~add setting `odwptp_url` which holds URL of Targetprocess API serverhost~~
 * [ ] enable localization (Czech and English)
+  - [ ] __FIXME__ script for shortcode's TinyMCE button should be localized
 
 ## Changelog
 
@@ -58,8 +59,8 @@ __Note:__ Versions are in reverse order.
 
 ### Version 0.4 _(in development)_
 
-* finished `targetprocess-table` shortcode
-* fixed remaining issues
+* progress on `targetprocess-table` shortcode - added pagination and sorting
+* fixed some issues
 * prepared for first release
 
 ### Version 0.3
