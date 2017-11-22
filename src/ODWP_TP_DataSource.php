@@ -42,17 +42,29 @@ class ODWP_TP_DataSource {
      */
     protected $where;
 
+	/**
+	 * @var string $orderby
+	 * @since 0.4
+	 */
+    protected $orderby;
+
+	/**
+	 * @var string $orderby
+	 * @since 0.4
+	 */
+	protected $orderbydesc;
+
     /**
      * Constructor.
+     * @param array $args
      * @since 0.3
      */
-    public function __construct() {
-        $take_opts = ['default' => 15, 'min_range' => 3, 'max_range' => 100];
-        $skip_opts = ['default' => 0, 'min_range' => 0];
-
-        $this->take = filter_input( INPUT_GET, 'take', FILTER_VALIDATE_INT, $take_opts );
-        $this->skip = filter_input( INPUT_GET, 'skip', FILTER_VALIDATE_INT, $skip_opts );
-        $this->where = filter_input( INPUT_GET, 'where' );
+    public function __construct( array $args ) {
+        $this->take = isset( $args['take'] )  ? (int) $args['take'] : 15;
+        $this->skip = isset( $args['skip'] )  ? (int) $args['skip'] : 0;
+        $this->where = isset( $args['where'] )  ? $args['where'] : '';
+	    $this->orderby = isset( $args['orderby'] )  ? $args['orderby'] : '';
+	    $this->orderbydesc = isset( $args['orderbydesc'] )  ? $args['orderbydesc'] : '';
     }
 
 	/**
@@ -92,38 +104,39 @@ class ODWP_TP_DataSource {
 		return $this->where;
 	}
 
+	/**
+	 * @return string
+	 * @since 0.4
+	 */
+	public function get_orderby() {
+		return $this->orderby;
+	}
+
+	/**
+	 * @return string
+	 * @since 0.4
+	 */
+	public function get_orderbydesc() {
+		return $this->orderbydesc;
+	}
+
     /**
      * Returns URL of the datasource.
      * @return string
      * @since 0.3
      */
     public function get_url() {
-        $base_url  = get_option( 'odwptp_url' );
-        $url       = $base_url . '/api/v1/UserStories/';
-        /*$params    = [];
+        $base_url = get_option( 'odwptp_url' );
+        $url      = $base_url . '/api/v1/UserStories/';
+	    $url     .= '?take=' . $this->take . '&skip=' . $this->skip . '&where=' . $this->where;
 
-        if ( $this->skip > 0 ) {
-            $params['skip'] = $this->skip;
-        }
-
-	    if ( $this->take > 0 ) {
-		    $params['take'] = $this->take;
+	    if ( ! empty( $this->orderby ) ) {
+		    $url .= '&orderby=' . $this->orderby;
 	    }
 
-        if ( ! empty( $this->where ) ) {
-            $params['where'] = $this->where;
-        }*/
-
-	    $params    = $this->get_params();
-
-	    if ( count( $params ) <= 0 ) {
-            return $url;
-        }
-
-        $url .= '?';
-        array_walk( $params, function( $key, $val ) use ( &$url ) {
-            $url .= ( ( substr( $url, -1 ) == '?' ) ? '' : '&' ) . $key . '=' . $val;
-        } );
+	    if ( ! empty( $this->orderbydesc ) ) {
+		    $url .= '&orderbydesc=' . $this->orderbydesc;
+	    }
 
         return $url;
     }

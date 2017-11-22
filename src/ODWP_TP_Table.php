@@ -19,8 +19,9 @@ if ( ! class_exists( 'ODWP_TP_Table' ) ) :
  * @todo Finish this (ODWP_TP_Table)!
  */
 class ODWP_TP_Table {
-    const POSITION_BOTTOM = 'bottom';
-    const POSITION_TOP    = 'top';
+    const POSITION_BOTTOM    = 'bottom';
+    const POSITION_TOP       = 'top';
+    const SHORTCODE_TITLE_ID = 'odwptp-targetprocess_table_title';
 
     /**
      * @var ODWP_TP_DataSource $ds
@@ -42,48 +43,6 @@ class ODWP_TP_Table {
     private $stories = [];
 
     /**
-     * @access private
-     * @param string $count
-     * @since 0.3
-     */
-    private $count = 0;
-
-    /**
-     * @access private
-     * @param bool $is_start
-     * @since 0.3
-     */
-    private $is_start = false;
-
-    /**
-     * @access private
-     * @param bool $is_end
-     * @since 0.3
-     */
-    private $is_end = false;
-
-    /**
-     * @access private
-     * @param string $base_url
-     * @since 0.3
-     */
-    private $base_url;
-
-    /**
-     * @access private
-     * @param string $prev_url
-     * @since 0.3
-     */
-    private $prev_url;
-
-    /**
-     * @access private
-     * @param string $next_url
-     * @since 0.3
-     */
-    private $next_url;
-
-    /**
      * Constructor.
      * @global string $odwptp_plugin_dir
      * @param array $args
@@ -99,47 +58,6 @@ class ODWP_TP_Table {
 
         include( $odwptp_plugin_dir . 'src/ODWP_TP_DataSource.php' );
         $this->ds = new ODWP_TP_DataSource( $args );
-    }
-
-    /**
-     * Renders HTML of our table.
-     * @since 0.3
-     */
-    public function render() {
-        $ret = $this->ds->get_data();
-?>
-<div class="odwptp-targetprocess_table_cont">
-    <?php if ( ( $ret instanceof WP_Error ) ) : ?>
-    <p class="odwptp-connection_error"><?php
-        printf(
-            __( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
-            '<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
-        );
-    ?></p>
-    <?php elseif ( $ret['response']['code'] != 200 ) : ?>
-    <p class="odwptp-connection_error"><?php
-        printf(
-            __( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba při spojení - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
-            '<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
-        );
-    ?></p>
-    <?php else :
-        $stories = $this->parse_user_stories( $ret );
-        $this->set_stories( $stories );
-
-        if ( $this->get_count() == 0 ) :
-            ?><p class="odwptp-connection_error"><?php
-                printf(
-                    __( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba při spojení - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
-                    '<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
-                );
-            ?></p><?php
-        endif;
-
-        $this->render_table();
-    endif; ?>
-</div>
-<?php
     }
 
     /**
@@ -198,61 +116,162 @@ class ODWP_TP_Table {
      * @since 0.3
      */
     public function get_count() {
-        return $this->count;
+        return count( $this->stories );
+    }
+
+	/**
+     * @global WP $wp
+	 * @return string Returns URL of previous set of items.
+	 * @since 0.4
+	 */
+	public function get_prev_url() {
+	    global $wp;
+
+	    $target = '#' . self::SHORTCODE_TITLE_ID;
+
+		if ( $this->is_start() ) {
+			return $target;
+        }
+
+        $params = $this->ds->get_params();
+		$params['skip'] = $params['skip'] - $params['take'];
+
+        return home_url( add_query_arg( $params, $wp->request ) ) . $target;
+	}
+
+	/**
+	 * @global WP $wp
+	 * @return string Returns URL of previous set of items.
+	 * @since 0.4
+	 */
+	public function get_next_url() {
+		global $wp;
+
+        $target = '#' . self::SHORTCODE_TITLE_ID;
+
+		if ( $this->is_end() ) {
+			return $target;
+		}
+
+		$params = $this->ds->get_params();
+		$params['skip'] = $params['skip'] + $params['take'];
+
+		return home_url( add_query_arg( $params, $wp->request ) ) . $target;
+	}
+
+	/**
+	 * @global WP $wp
+     * @param string $column
+	 * @return string Returns URL for sorting anchors.
+	 * @since 0.4
+	 */
+	public function get_sort_url( $column ) {
+	    global $wp;
+
+        $target  = '#' . self::SHORTCODE_TITLE_ID;
+		$orderby = $this->ds->get_orderby();
+        $params  = $this->ds->get_params();
+
+        unset( $params['orderby'] );
+        unset( $params['orderbydesc'] );
+
+        $params[$column === $orderby ? 'orderbydesc' : 'orderby'] = $column;
+
+        return home_url( add_query_arg( $params, $wp->request ) ) . $target;
     }
 
     /**
-     * Returns stories.
      * @return array Array of {@see ODWP_TP_UserStory}.
-     * @since 0.3
+     * @since 0.3 Returns stories.
      */
     public function get_stories() {
         return $this->stories;
     }
 
-    /**
-     * Sets stories and other private properties.
-     * @global WP $wp
-     * @param array $stories Array of {@see ODWP_TP_UserStory}.
-     * @since 0.3
-     */
-    public function set_stories( array $stories ) {
-        global $wp;
+	/**
+	 * Sets stories and other private properties.
+	 * @param array $stories Array of {@see ODWP_TP_UserStory}.
+	 * @since 0.3
+	 */
+	public function set_stories( array $stories ) {
+		$this->stories  = $stories;
+	}
 
-        $this->stories  = $stories;
-        $this->count    = count( $this->stories );
-        $this->is_start = ( $this->ds->get_skip() == 0 );
-        $this->is_end   = ( $this->count < $this->ds->get_take() );
-        $this->base_url = home_url( $wp->request );
-        $this->prev_url = home_url(
-            add_query_arg( [
-                'take'  => $this->ds->get_take(),
-                'skip'  => $this->ds->get_skip(),
-                'where' => $this->ds->get_where(),
-                'prev'  => 1
-            ], $wp->request
-        ) );
-        $this->next_url = home_url(
-            add_query_arg( [
-                'take'  => $this->ds->get_take(),
-                'skip'  => $this->ds->get_skip(),
-                'where' => $this->ds->get_where(),
-                'next'  => 1
-            ], $wp->request
-        ) );
+	/**
+	 * @return bool Returns TRUE if we are on the start of items list.
+     * @since 0.4
+	 */
+    public function is_start() {
+        return ( $this->ds->get_skip() === 0 );
     }
+
+	/**
+	 * @return bool Returns TRUE if we are on the end of items list.
+     * @since 0.4
+	 */
+    public function is_end() {
+        return ( $this->get_count() < $this->ds->get_take() );
+    }
+
+	/**
+	 * Renders HTML of our table.
+	 * @since 0.3
+	 */
+	public function render() {
+		$ret = $this->ds->get_data();
+		?>
+        <div class="odwptp-targetprocess_table_cont">
+			<?php if ( ( $ret instanceof WP_Error ) ) :?>
+                <p class="odwptp-connection_error"><?php
+					printf(
+						__( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
+						'<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
+					);
+					?></p>
+			<?php elseif ( $ret['response']['code'] != 200 ) :?>
+                <p class="odwptp-connection_error"><?php
+					printf(
+						__( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba při spojení - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
+						'<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
+					);
+					?></p>
+			<?php else :
+				$stories = $this->parse_user_stories( $ret );
+				$this->set_stories( $stories );
+
+				if ( $this->get_count() == 0 ) :
+					?><p class="odwptp-connection_error"><?php
+					printf(
+						__( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba při spojení - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
+						'<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
+					);
+					?></p><?php
+				endif;
+
+				$this->render_table();
+			endif; ?>
+        </div>
+		<?php
+	}
 
     /**
      * @internal Renders table.
      * @since 0.3
      */
     protected function render_table() {
-        $this->render_tablenav();
 ?>
-<table id="odwptp-targetprocess_table" class="targetprocess-table">
-    <?php $this->render_thead() ?>
-    <?php $this->render_tbody() ?>
-</table>
+<div class="targetprocess-table-cont">
+    <?php if ( ! empty( $this->title ) ) :?>
+    <h2 id="<?=self::SHORTCODE_TITLE_ID?>"><?=$this->title?></h2>
+    <?php endif?>
+    <div class="row">
+        <?php $this->render_tablenav()?>
+    </div>
+    <table id="odwptp-targetprocess_table" class="targetprocess-table">
+        <?php $this->render_thead()?>
+        <?php $this->render_tbody()?>
+    </table>
+</div>
 <?php
     }
 
@@ -263,80 +282,72 @@ class ODWP_TP_Table {
      */
     protected function render_tablenav( $position = self::POSITION_TOP ) {
 ?>
-<div class="tablenav <?= $position ?>">
+<div class="tablenav <?=$position?>">
     <div class="tablenav-pages">
-        <span class="displaying-num"><?php printf( __( 'Zobrazeno položek: %d', 'odwptp' ), $this->count ) ?></span>
-        <?php if ( ! ( $this->is_start && $this->is_end ) ) : ?>
+        <span class="displaying-num"><?php printf( __( 'Zobrazené: od <strong>%d</strong> do <strong>%d</strong>', 'odwptp' ), $this->ds->get_skip(), $this->ds->get_skip() + $this->ds->get_take() )?></span>
+        <?php if ( ! ( $this->is_start() && $this->is_end() ) ) :?>
         <span class="pagination-links">
-            <?php if ( ! $this->is_start ) : ?>
-            <a class="prev-page" href="<?= $this->prev_url ?>"><?php _e( 'Předchozí', 'odwptp' ) ?></a>
-            <?php else : ?>
-            <span class="prev-page"><?php _e( 'Předchozí', 'odwptp' ) ?></span>
-            <?php endif ?>
-            <?php if ( ! $this->is_end ) : ?>
-            <a class="next-page" href="<?= $this->next_url ?>"><?php _e( 'Následující', 'odwptp' ) ?></a>
-            <?php else : ?>
-            <span class="next-page"><?php _e( 'Následující', 'odwptp' ) ?></span>
-            <?php endif ?>
+            <?php if ( ! $this->is_start() ) :?>
+            <a class="prev-page" href="<?=$this->get_prev_url()?>"><?php _e( 'Předchozí', 'odwptp' )?></a>
+            <?php else :?>
+            <span class="prev-page"><?php _e( 'Předchozí', 'odwptp' )?></span>
+            <?php endif?>
+            <?php if ( ! $this->is_end() ) :?>
+            <a class="next-page" href="<?=$this->get_next_url()?>"><?php _e( 'Následující', 'odwptp' )?></a>
+            <?php else :?>
+            <span class="next-page"><?php _e( 'Následující', 'odwptp' )?></span>
+            <?php endif?>
         </span>
-        <?php endif ?>
+        <?php endif?>
     </div>
 </div>
 <?php
     }
 
     /**
-     * @internal Renders thead element.
-     * @param string $position (Optional.)
-     * @since 0.3
+     * @internal Renders <th> element.
+     * @param string $col_id
+     * @param string $val_id
+     * @param string $label
+     * @since 0.4
      */
-    protected function render_thead( $position = self::POSITION_TOP ) {
+    protected function render_thead_col( $col_id, $val_id, $label ) {
+        $classes = [];
+        $classes[] = 'column-' . $col_id;
+        //sorted
+        //asc/desc
 ?>
-    <thead class="thead-<?= $position ?>">
-        <tr>
-            <th class="column-id column-primary sorted desc" scope="col">
-                <a href="#">
-                    <span><?php _e( 'ID', 'odwptp' ) ?></span>
-                    <span class="sorting-indicator"></span>
-                </a>
-            </th>
-            <th class="column-role sortable" scope="col">
-                <a href="#">
-                    <span><?php _e( 'Role', 'odwptp' ) ?></span>
-                    <span class="sorting-indicator"></span>
-                </a>
-            </th>
-            <th class="column-role sortable" scope="col">
-                <a href="#">
-                    <span><?php _e( 'Tagy', 'odwptp' ) ?></span>
-                    <span class="sorting-indicator"></span>
-                </a>
-            </th>
-            <th class="column-role sortable" scope="col">
-                <a href="#">
-                    <span><?php _e( 'Min. MD rate', 'odwptp' ) ?></span>
-                    <span class="sorting-indicator"></span>
-                </a>
-            </th>
-            <th class="column-role sortable" scope="col">
-                <a href="#">
-                    <span><?php _e( 'Opt. MD rate', 'odwptp' ) ?></span>
-                    <span class="sorting-indicator"></span>
-                </a>
-            </th>
-            <th class="column-role sortable" scope="col">
-                <a href="#">
-                    <span><?php _e( 'Typ kontraktu', 'odwptp' ) ?></span>
-                    <span class="sorting-indicator"></span>
-                </a>
-            </th>
-        </tr>
-    </thead>
+        <th class="<?=implode( ' ', $classes )?>" scope="col">
+            <a href="<?=$this->get_sort_url( $val_id )?>">
+                <span><?=$label?></span>
+                <span class="sorting-indicator"></span>
+            </a>
+        </th>
 <?php
     }
 
     /**
-     * @internal Renders tbody element.
+     * @internal Renders <thead> element.
+     * @since 0.3
+     * @since 0.4 Removed `$position` parameter.
+     */
+    protected function render_thead() {
+?>
+<thead>
+    <tr><?php
+    $this->render_thead_col( 'id', 'Id', __( 'ID', 'odwptp') );
+    $this->render_thead_col( 'role', 'CustomFields.Role', __( 'Role', 'odwptp') );
+    $this->render_thead_col( 'tags', 'Tags', __( 'Tagy', 'odwptp') );
+    $this->render_thead_col( 'min_md_rate', 'CustomFields.Minimal MD rateTags', __( 'Min. MD rate', 'odwptp') );
+    $this->render_thead_col( 'opt_md_rate', 'CustomFields.Optimal MD rate', __( 'Opt. MD rate', 'odwptp') );
+    $this->render_thead_col( 'contract_type', 'CustomFields.Contract Type', __( 'Typ kontraktu', 'odwptp') );
+    ?></tr>
+</thead>
+<?php
+    }
+
+    /**
+     * @internal Renders <tbody> element.
      * @since 0.3
      */
     protected function render_tbody() {
@@ -350,45 +361,24 @@ class ODWP_TP_Table {
     }
 
     /**
-     * @internal Renders tbody's tr element.
+     * @internal Renders <tbody>'s <tr> element.
      * @param ODWP_TP_UserStory $story
      * @since 0.3
      */
     protected function render_tbody_row( ODWP_TP_UserStory $story ) {
 ?>
-    <tr>
-        <th scope="row"><?php echo $story->get_id() ?></th>
-        <td><?php echo $story->get_role() ?></td>
-        <td><?php echo $story->get_tags() ?></td>
-        <td><?php echo $story->get_min_md_rate() ?></td>
-        <td><?php echo $story->get_opt_md_rate() ?></td>
-        <td><?php echo $story->get_contract_type() ?></td>
+    <tr class="first-row-of-one" id="first-row-of-one-<?=$story->get_id()?>">
+        <td class="column-id" scope="row"><a href="#"><?=$story->get_id()?></a></td>
+        <td class="column-role"><?=$story->get_role()?></td>
+        <td class="column-tags"><?=$story->get_tags()?></td>
+        <td class="column-min_md_rate"><?=$story->get_min_md_rate()?></td>
+        <td class="column-opt_md_rate"><?=$story->get_opt_md_rate()?></td>
+        <td class="column-contract_type"><?=$story->get_contract_type()?></td>
+    </tr>
+    <tr class="second-row-of-one hidden" id="second-row-of-one-<?=$story->get_id()?>">
+        <td colspan="6" class="column-description"><?=$story->get_description( true )?></td>
     </tr>
 <?php
-    }
-
-    /**
-     * Returns URL to previous items.
-     * @return string Returns "#" if there are no previous items.
-     * @since 0.3
-     */
-    public function get_prev_items_url() {
-        $params = $this->ds->get_params();
-
-        if ( $params['skip'] == 0 ) {
-            return '#';
-        }
-
-        // XXX Finish `ODWP_TP_Table::get_prev_items_url`!
-    }
-
-    /**
-     * Returns URL to next items.
-     * @return string
-     * @since 0.3
-     */
-    public function get_next_items_url() {
-        // XXX Finish `ODWP_TP_Table::get_next_items_url`!
     }
 }
 

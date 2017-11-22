@@ -52,7 +52,6 @@
 }
 .sorting-indicator::before {
     font: 400 20px/1 dashicons;
-    line-height: 1;
     speak: none;
     display: inline-block;
     padding: 0;
@@ -79,4 +78,29 @@ th.asc a:focus span.sorting-indicator:before {
 }
 th.sorted a span, th.sortable:hover a span {
     visibility: visible;
+}
+
+.first-row-of-one {
+    cursor: pointer;
+}
+.first-row-of-one:hover th.column-id a {
+    text-decoration: none !important;
+}
+.first-row-of-one:hover {
+    background-color: #9ea476;
+}
+.second-row-of-one.hidden {
+    visibility: collapse;
+}
+.second-row-of-one td {
+    background-color: #8a6d3b;
+}
+.second-row-of-one td div {
+    padding: 5px 20px;
+    font-size: 95%;
+}
+.second-row-of-one span.description {
+    font-size: 90%;
+    font-style: italic;
+    text-decoration: olive;
 }

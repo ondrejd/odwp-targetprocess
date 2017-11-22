@@ -3,7 +3,7 @@
  * Plugin Name: odwp-targetprocess
  * Plugin URI: https://github.com/ondrejd/odwp-targetprocess
  * Description: Plugin that uses <a href="https://www.targetprocess.com/" target="blank">Targetprocess API</a> to publish <em>user stories</em> on your site.
- * Version: 0.3
+ * Version: 0.4
  * Author: Ondrej Donek
  * Author URI: https://ondrejd.com/
  * License: GPLv3
@@ -315,11 +315,39 @@ if ( ! function_exists( 'odwptp_shortcode_add' ) ) :
      * @since 0.3
      */
     function odwptp_shortcode_add( $atts ) {
+        // Process attributes
         $a = shortcode_atts( [
-            'take'  => 100,
-            'skip'  => 0,
-            'title' => '',
+            'take'        => 100,
+            'skip'        => 0,
+            'title'       => '',
+            'where'       => '',
+            'orderby'     => '',
+            'orderbydesc' => '',
         ], $atts );
+
+	    // Override these with those in GET (if there are any)
+
+	    if ( isset( $_GET['take'] ) ) {
+		    $a['take'] = (int) filter_input( INPUT_GET, 'take', FILTER_VALIDATE_INT );
+	    }
+
+	    if ( isset( $_GET['skip'] ) ) {
+		    $a['skip'] = (int) filter_input( INPUT_GET, 'skip', FILTER_VALIDATE_INT );
+	    }
+
+	    if ( isset( $_GET['where'] ) ) {
+		    $a['where'] = filter_input( INPUT_GET, 'where' );
+	    }
+
+	    if ( isset( $_GET['orderby'] ) ) {
+		    $a['orderby'] = filter_input( INPUT_GET, 'orderby' );
+	    }
+
+	    if ( isset( $_GET['orderbydesc'] ) ) {
+		    $a['orderbydesc'] = filter_input( INPUT_GET, 'orderbydesc' );
+	    }
+
+	    // Render shortcode
 
         ob_start();
         $table = new ODWP_TP_Table( $a );
@@ -370,7 +398,7 @@ if ( ! function_exists( 'odwptp_tinymce_external_plugins' ) ) :
      * @todo Translate TinyMCE plugin!
      */
     function odwptp_tinymce_external_plugins( $plugins ) {
-        $plugins['odwptp_targetprocess_table'] = plugins_url( 'assets/js/targetprocess_table-shortcode.js', __FILE__ );
+        $plugins['odwptp_targetprocess_table'] = plugins_url( 'assets/js/shortcode.js', __FILE__ );
         return $plugins;
     }
 endif;
@@ -391,17 +419,33 @@ if ( ! function_exists( 'odwptp_add_tinymce_button' ) ) :
 endif;
 
 
-if ( ! function_exists( 'odwptp_add_stylesheet' ) ) :
+if ( ! function_exists( 'odwptp_enqueue_style' ) ) :
     /**
-     * @internal Adds our stylesheet.
+     * @internal Hook for "wp_enqueue_scripts" action. Adds our stylesheet.
+     * @link https://codex.wordpress.org/Plugin_API/Action_Reference/wp_enqueue_scripts for documentation on "wp_enqueue_scripts" action.
      * @since 0.3
+     * @since 0.4 Renamed to `odwptp_enqueue_style` and attached to "wp_enqueue_scripts" action instead of "wp_head" action."
      */
-    function odwptp_add_stylesheet() {
-        wp_enqueue_style( 'odwp-targetprocess', plugins_url( 'assets/css/public.css', __FILE__ ) );
+    function odwptp_enqueue_style() {
+        wp_enqueue_style( 'odwp-targetprocess-public-css', plugins_url( 'assets/css/public.css', __FILE__ ) );
     }
 endif;
 
-add_action( 'wp_head', 'odwptp_add_stylesheet' );
+add_action( 'wp_enqueue_scripts', 'odwptp_enqueue_style' );
+
+
+if ( ! function_exists( 'odwptp_enqueue_script' ) ) :
+	/**
+	 * @internal Hook for "wp_enqueue_scripts" action. Adds our JavaScript
+     * @link https://codex.wordpress.org/Plugin_API/Action_Reference/wp_enqueue_scripts for documentation on "wp_enqueue_scripts" action.
+	 * @since 0.4
+	 */
+	function odwptp_enqueue_script() {
+		wp_enqueue_script( 'odwp-targetprocess-public-js', plugins_url( 'assets/js/public.js', __FILE__ ), ['jquery'] );
+	}
+endif;
+
+add_action( 'wp_enqueue_scripts', 'odwptp_enqueue_script' );
 
 
 if ( ! function_exists( 'odwptp_xxx' ) ) :
