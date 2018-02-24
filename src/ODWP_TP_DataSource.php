@@ -143,7 +143,7 @@ class ODWP_TP_DataSource {
 
     /**
      * Makes call to Targetprocess API.
-     * @return array|null|WP_Error
+     * @return array|WP_Error
      * @since 0.3
      */
     public function get_data() {
@@ -153,13 +153,10 @@ class ODWP_TP_DataSource {
 
         // Credentials are not set
         if( empty( $login ) || empty( $password ) || empty( $call_url ) ) {
-            add_action( 'admin_notices', function() {
-                odwptp_print_admin_notice( sprintf(
-                    __( 'Pro správné použití pluginu <strong>odwp-targetprocess</strong> musíte nastavit přístupové údaje ke službě <strong>Targetprocess</strong> - viz. <a href="%s">Nastavení &gt; Obecné</a>.', 'odwptp' ),
-                    admin_url( 'options-general.php#odwptp-settings' )
-                ), 'warning' );
-            } );
-            return;
+            return new WP_Error( 'odwptp_err_credentials_not_set', sprintf(
+                __( 'Pro správné použití pluginu <strong>odwp-targetprocess</strong> musíte nastavit přístupové údaje ke službě <strong>Targetprocess</strong> - viz. <a href="%s">Nastavení &gt; Obecné</a>.', 'odwptp' ),
+                admin_url( 'options-general.php#odwptp-settings' )
+            ) );
         }
 
         // Check the credentials
@@ -169,6 +166,15 @@ class ODWP_TP_DataSource {
                 'Accept' => 'application/json',
             ],
         ] );
+
+        if ( ( $ret instanceof WP_Error ) || $ret['response']['code'] != 200 ) {
+            return new WP_Error( 'odwptp_bad_api_response', sprintf(
+                __( '%sPři spojení se serverem <strong>Targetprocess</strong> nastala chyba při spojení - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.%s', 'odwptp' ),
+                '<p class="odwptp-connection_error">',
+                '<a href="mailto:' . get_option( 'admin_email' ) . '">',
+                '</a>', '</p>'
+            ) );
+        }
 
         return $ret;
     }

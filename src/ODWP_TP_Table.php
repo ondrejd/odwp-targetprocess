@@ -162,7 +162,7 @@ class ODWP_TP_Table {
 	/**
 	 * @global WP $wp
      * @param string $column
-	 * @return string Returns URL for sorting anchors.
+	 * @return array Returns array URL and CSS class.
 	 * @since 0.4
 	 */
 	public function get_sort_url( $column ) {
@@ -177,7 +177,10 @@ class ODWP_TP_Table {
 
         $params[$column === $orderby ? 'orderbydesc' : 'orderby'] = $column;
 
-        return home_url( add_query_arg( $params, $wp->request ) ) . $target;
+        return [
+            'url'     => home_url( add_query_arg( $params, $wp->request ) ) . $target,
+            'classes' => isset( $params['orderby'] ) ? 'odwptp-orderby' : 'odwptp-orderbydesc'
+        ];
     }
 
     /**
@@ -222,19 +225,7 @@ class ODWP_TP_Table {
 		?>
         <div class="odwptp-targetprocess_table_cont">
 			<?php if ( ( $ret instanceof WP_Error ) ) :?>
-                <p class="odwptp-connection_error"><?php
-					printf(
-						__( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
-						'<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
-					);
-					?></p>
-			<?php elseif ( $ret['response']['code'] != 200 ) :?>
-                <p class="odwptp-connection_error"><?php
-					printf(
-						__( 'Při spojení se serverem <strong>Targetprocess</strong> nastala chyba při spojení - zkuste, prosím, obnovit stránku a pokud se situace nezlepší, kontaktujte %sadministrátora%s.', 'odwptp' ),
-						'<a href="mailto:' . get_option( 'admin_email' ) . '">', '</a>'
-					);
-					?></p>
+                <p class="odwptp-connection_error"><?=$ret->get_error_message()?></p>
 			<?php else :
 				$stories = $this->parse_user_stories( $ret );
 				$this->set_stories( $stories );
@@ -288,12 +279,12 @@ class ODWP_TP_Table {
         <?php if ( ! ( $this->is_start() && $this->is_end() ) ) :?>
         <span class="pagination-links">
             <?php if ( ! $this->is_start() ) :?>
-            <a class="prev-page" href="<?=$this->get_prev_url()?>"><?php _e( 'Předchozí', 'odwptp' )?></a>
+            <a class="prev-page" href="<?=esc_url( $this->get_prev_url() )?>"><?php _e( 'Předchozí', 'odwptp' )?></a>
             <?php else :?>
             <span class="prev-page"><?php _e( 'Předchozí', 'odwptp' )?></span>
             <?php endif?>
             <?php if ( ! $this->is_end() ) :?>
-            <a class="next-page" href="<?=$this->get_next_url()?>"><?php _e( 'Následující', 'odwptp' )?></a>
+            <a class="next-page" href="<?=esc_url( $this->get_next_url() )?>"><?php _e( 'Následující', 'odwptp' )?></a>
             <?php else :?>
             <span class="next-page"><?php _e( 'Následující', 'odwptp' )?></span>
             <?php endif?>
@@ -312,16 +303,17 @@ class ODWP_TP_Table {
      * @since 0.4
      */
     protected function render_thead_col( $col_id, $val_id, $label ) {
-        $classes = [];
+        $classes   = [];
         $classes[] = 'column-' . $col_id;
-        //sorted
-        //asc/desc
+        $sort_url  = $this->get_sort_url( $val_id );
+        $classes[] = $sort_url['classes'];
+
 ?>
         <th class="<?=implode( ' ', $classes )?>" scope="col">
-            <a href="<?=$this->get_sort_url( $val_id )?>">
-                <span><?=$label?></span>
+            <a href="<?=esc_url( $sort_url )?>">
+                <span><?=esc_html( $label )?></span>
                 <span class="sorting-indicator"></span>
-            </a>
+            </a><small><?=$col_id?>|<?=$val_id?>|<?=$label?></small>
         </th>
 <?php
     }
