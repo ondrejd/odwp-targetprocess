@@ -371,12 +371,12 @@ include( $odwptp_plugin_dir . 'src/ODWP_TP_UserStory.php' );
 include( $odwptp_plugin_dir . 'src/ODWP_TP_Table.php' );
 
 
-if ( ! function_exists( 'odwptp_shrotcode_button_init' ) ) :
+if ( ! function_exists( 'odwptp_shortcode_tinymce_init' ) ) :
     /**
      * Registers TinyMCE button for our shortcode.
      * @since 0.3
      */
-    function odwptp_shrotcode_button_init() {
+    function odwptp_shortcode_tinymce_init() {
         if ( ! current_user_can( 'edit_posts' ) && ! current_user_can( 'edit_pages' ) && get_user_option( 'rich_editing' ) == 'true' ) {
             return;
         }
@@ -386,7 +386,7 @@ if ( ! function_exists( 'odwptp_shrotcode_button_init' ) ) :
     }
 endif;
 
-add_action( 'admin_init', 'odwptp_shrotcode_button_init' );
+add_action( 'admin_init', 'odwptp_shortcode_tinymce_init' );
 
 
 if ( ! function_exists( 'odwptp_tinymce_external_plugins' ) ) :
